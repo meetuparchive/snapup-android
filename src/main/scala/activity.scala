@@ -1,10 +1,10 @@
 package com.meetup
  
-import _root_.android.app.Activity
+import _root_.android.app.ListActivity
 import _root_.android.os.Bundle
-import _root_.android.widget.TextView
+import _root_.android.widget.ArrayAdapter
  
-class MainActivity extends Activity {
+class MainActivity extends ListActivity {
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
 
@@ -19,12 +19,11 @@ class MainActivity extends Activity {
     val at = Token("6beed634b161ce2ff6f3963ea6287b9e","3ce7bbbe6a5b200b3117d83e5196b6e9")
     val cli = OAuthClient(consumer, at)
     val h = new Http
-    val str = h(cli(Events.member_id("7230113")) ># (
+    val events = h(cli(Events.member_id("7230113")) ># (
       Response.results andThen { _ flatMap Event.name }
-    )) mkString "\n"
+    )) toArray
     
-    setContentView(new TextView(this) {
-      setText(str)
-    })
+    setListAdapter(new ArrayAdapter(this,
+      _root_.android.R.layout.simple_list_item_1, events));
   }
 }
