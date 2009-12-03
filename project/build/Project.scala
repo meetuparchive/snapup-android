@@ -1,6 +1,6 @@
 import sbt._
 
-class TheProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) {    
+class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) {    
   override def androidSdkPath = Path.fromFile("/Users/nathan/Programming/android-sdk-mac/")
   override def androidPlatformName="android-2.0"
 

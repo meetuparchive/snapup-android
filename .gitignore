@@ -3,4 +3,4 @@ project/boot/
 project/plugins/lib_managed/
 project/plugins/project/
 project/plugins/src_managed/
-src/main/java/the/project/R.java
+src/main/java/com/meetup/R.java
