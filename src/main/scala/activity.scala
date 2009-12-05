@@ -1,8 +1,8 @@
-package com.meetup
+package meetup.example
  
-import _root_.android.app.ListActivity
-import _root_.android.os.Bundle
-import _root_.android.widget.ArrayAdapter
+import android.app.ListActivity
+import android.os.Bundle
+import android.widget.ArrayAdapter
  
 class MainActivity extends ListActivity {
   override def onCreate(savedInstanceState: Bundle) {
@@ -24,6 +24,6 @@ class MainActivity extends ListActivity {
     )) toArray
     
     setListAdapter(new ArrayAdapter(this,
-      _root_.android.R.layout.simple_list_item_1, events));
+      android.R.layout.simple_list_item_1, events));
   }
 }
