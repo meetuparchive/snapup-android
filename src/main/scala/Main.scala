@@ -21,14 +21,19 @@ class Prefs(context: Context) {
   val access = context.getSharedPreferences("access", Context.MODE_PRIVATE)
 }
 
+object Account {
+  def tokens(sp: SharedPreferences) = Token(
+    new scala.collection.jcl.MapWrapper[String, Any] { def underlying = sp.getAll.asInstanceOf[java.util.Map[String,Any]] }
+  )
+  val consumer = Consumer("72DA10F33DB36B11DA502251ED135E76","F6805ED5DB63D7AFE9BF0506B6430CF2")
+  def client(access: Token) = OAuthClient(consumer, access)
+  def client(prefs: Prefs) = tokens(prefs.access) map { access => OAuthClient(consumer, access) }
+}
+
 class Main extends Activity {
   implicit val http = new Http
   lazy val prefs = new Prefs(this)
-  val consumer = Consumer("72DA10F33DB36B11DA502251ED135E76","F6805ED5DB63D7AFE9BF0506B6430CF2")
 
-  def token(sp: SharedPreferences) = Token(
-    new scala.collection.jcl.MapWrapper[String, Any] { def underlying = sp.getAll.asInstanceOf[java.util.Map[String,Any]] }
-  )
   def write(sp: SharedPreferences, token: Token) = {
     val editor = sp.edit()
     editor.putString("oauth_token", token.value)
@@ -43,7 +48,7 @@ class Main extends Activity {
     startActivity(intent)
   }
   def fetch_meetups(at: Token) {
-    val cli = OAuthClient(consumer, at)
+    val cli = Account.client(at)
     val json =  http(cli(Events.member_id("7230113")) as_str)
     startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
   }
@@ -54,16 +59,16 @@ class Main extends Activity {
   override def onResume() {
     super.onResume()
     actor {
-      token(prefs.access) match {
+      Account.tokens(prefs.access) match {
         case None => 
           getIntent.getData match {
             case null =>
-              authorize(write(prefs.request, http(Auth.request_token(consumer))))
+              authorize(write(prefs.request, http(Auth.request_token(Account.consumer))))
             case uri => 
-              token(prefs.request) filter { 
+              Account.tokens(prefs.request) filter { 
                 _.value == uri.getQueryParameter("oauth_token") 
               } foreach { rt =>
-                fetch_meetups(write(prefs.access, http(Auth.access_token(consumer, rt))))
+                fetch_meetups(write(prefs.access, http(Auth.access_token(Account.consumer, rt))))
               }
           }
         case Some(at) => fetch_meetups(at)

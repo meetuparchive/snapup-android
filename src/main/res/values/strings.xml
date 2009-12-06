@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">Snapup</string>
+  <string name="photo_cancelled">Snapshot Cancelled</string>
 </resources>
