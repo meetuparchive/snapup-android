@@ -1,7 +1,7 @@
 package meetup.example
  
 import android.app.{Activity, ListActivity}
-import android.os.Bundle
+import android.os.{Bundle, Environment}
 import android.widget.{SimpleAdapter, ListView, Toast}
 import android.view.{View, Menu, MenuItem}
 import android.net.Uri
@@ -37,7 +37,7 @@ class Meetups extends ListActivity {
       Array(android.R.id.text1, android.R.id.text2)
     ))
   }
-  val file = new File("/sdcard/dcim/Camera/snapup.jpg")
+  val file = new File(Environment.getExternalStorageDirectory, "snapup.jpg")
   
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file)), 1)
