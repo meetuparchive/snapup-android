@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="0.1" android:versionCode="1" package="meetup.example">
   <uses-sdk android:minSdkVersion="4"/>
   <application android:icon="@drawable/app_icon" android:label="@string/app_name">
-    <activity android:label="@string/app_name" android:name=".Main">
+    <activity android:name=".Main">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
@@ -14,7 +14,7 @@
         <data android:scheme="snapup"/>
       </intent-filter>
     </activity>
-    <activity android:label="@string/app_name" android:name=".Meetups">
+    <activity android:theme="@android:style/Theme.NoTitleBar" android:name=".Meetups">
       <intent-filter>
         <action android:name="android.intent.action.VIEW"/>
       </intent-filter>

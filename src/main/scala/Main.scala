@@ -6,6 +6,8 @@ import android.app.Activity
 import android.net.Uri
 import android.content.{SharedPreferences, Context, Intent}
 
+import scala.actors.Actor._
+
 import dispatch._
 import oauth._
 import meetup._
@@ -47,19 +49,21 @@ class Main extends Activity {
   }
   override def onResume() {
     super.onResume()
-    token(access_prefs) match {
-      case None => 
-        getIntent.getData match {
-          case null =>
-            authorize(write(request_prefs, http(Auth.request_token(consumer))))
-          case uri => 
-            token(request_prefs) filter { 
-              _.value == uri.getQueryParameter("oauth_token") 
-            } foreach { rt =>
-              fetch_meetups(write(access_prefs, http(Auth.access_token(consumer, rt))))
-            }
-        }
-      case Some(at) => fetch_meetups(at)
+    actor {
+      token(access_prefs) match {
+        case None => 
+          getIntent.getData match {
+            case null =>
+              authorize(write(request_prefs, http(Auth.request_token(consumer))))
+            case uri => 
+              token(request_prefs) filter { 
+                _.value == uri.getQueryParameter("oauth_token") 
+              } foreach { rt =>
+                fetch_meetups(write(access_prefs, http(Auth.access_token(consumer, rt))))
+              }
+          }
+        case Some(at) => fetch_meetups(at)
+      }
     }
   }
 }
