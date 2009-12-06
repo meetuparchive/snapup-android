@@ -1,8 +1,8 @@
 package meetup.example
- 
-import android.app.ListActivity
+
 import android.os.Bundle
-import android.widget.SimpleAdapter
+import android.view.Window
+import android.app.Activity
 import android.net.Uri
 import android.content.{SharedPreferences, Context, Intent}
 
@@ -13,8 +13,8 @@ import dispatch.liftjson.Js._
 import Http._
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
- 
-class MainActivity extends ListActivity {
+
+class Main extends Activity {
   implicit val http = new Http
   val consumer = Consumer("72DA10F33DB36B11DA502251ED135E76","F6805ED5DB63D7AFE9BF0506B6430CF2")
   lazy val request_prefs = getSharedPreferences("request", Context.MODE_PRIVATE)
@@ -36,28 +36,17 @@ class MainActivity extends ListActivity {
     intent.setData(Uri.parse(Auth.authorize_url(rt, "snapup:///").to_uri.toString))
     startActivity(intent)
   }
-  
   def fetch_meetups(at: Token) {
     val cli = OAuthClient(consumer, at)
-    val (events, _) = cli.call(Events.member_id("7230113"))
-    val data = for (e <- events; name <- Event.name(e); group <- Event.group_name(e)) yield {
-      val map = new java.util.HashMap[String, String]
-      map.put("name", name)
-      map.put("group", group)
-      map
-    }
-
-    setListAdapter(new SimpleAdapter(this, 
-      java.util.Arrays.asList(data.toArray: _*),
-      android.R.layout.simple_list_item_2,
-      Array("name", "group"),
-      Array(android.R.id.text1, android.R.id.text2)
-    ))
+    val json =  http(cli(Events.member_id("7230113")) as_str)
+    startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
   }
-  
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    
+    setContentView(R.layout.main);
+  }
+  override def onResume() {
+    super.onResume()
     token(access_prefs) match {
       case None => 
         getIntent.getData match {
