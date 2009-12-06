@@ -1,0 +1,5 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_item_reset"
+          android:title="Reset Linked Account"
+          android:icon="@android:drawable/ic_menu_close_clear_cancel" />
+</menu>
