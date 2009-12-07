@@ -48,7 +48,9 @@ class Main extends Activity {
   }
   def fetch_meetups(at: Token) {
     val cli = Account.client(at)
-    val json =  http(cli(Events.member_id("7230113")) as_str)
+    val (member, _) = cli.call(Members.self)
+    val id = member flatMap Member.id
+    val json =  http(cli(Events.member_id(id.head)) as_str)
     startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
   }
   override def onCreate(savedInstanceState: Bundle) {
