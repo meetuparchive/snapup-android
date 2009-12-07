@@ -1,7 +1,7 @@
 package meetup.example
  
-import android.app.{Activity, ListActivity, AlertDialog}
-import android.os.{Bundle, Environment}
+import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
+import android.os.{Bundle, Environment, Looper, Handler, Message}
 import android.widget.{SimpleAdapter, ListView, Toast}
 import android.view.{View, Menu, MenuItem}
 import android.net.Uri
@@ -13,6 +13,7 @@ import android.util.Log
 import dispatch.meetup._
 import dispatch.Http
 import java.io.File
+import scala.actors.Actor._
 
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
@@ -22,7 +23,6 @@ class Meetups extends ListActivity {
   implicit val http = new Http
   lazy val meetups =
     Response.results(JsonParser.parse(getIntent.getExtras.getString("meetups")))
-  val FAILED_DIALOG = 0
   
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -39,6 +39,7 @@ class Meetups extends ListActivity {
       Array("name", "group"),
       Array(android.R.id.text1, android.R.id.text2)
     ))
+    actor { handler.sendEmptyMessage(0) }
   }
   val image_f = new File(Environment.getExternalStorageDirectory, "snapup-temp.jpg")
   
@@ -55,34 +56,49 @@ class Meetups extends ListActivity {
           Event.name(m).head, Event.group_name(m).head
         )
         try_upload(index)
-      case _ => Toast.makeText(this, R.string.photo_cancelled, Toast.LENGTH_SHORT).show()
+      case _ => Toast.makeText(this, R.string.post_cancelled, Toast.LENGTH_SHORT).show()
     }
   }
   
   def try_upload(index: Int) {
-    try {
-      Account.client(prefs) orElse { 
-        error("somehow in Meetups#try_upload() without valid client")
-      } foreach { cli =>
-        cli.call(PhotoUpload.event_id(Event.id(meetups(index)).head).photo(image_f))
+    val loading = loading_dialog
+    actor {
+      try {
+        Account.client(prefs) orElse { 
+          error("somehow in Meetups#try_upload() without valid client")
+        } foreach { cli =>
+          cli.call(PhotoUpload.event_id(Event.id(meetups(index)).head).photo(image_f))
+        }
+        image_f.delete()
+        handler.sendMessage(Message.obtain(handler, DISMISS, loading))
+      } catch {
+        case e => 
+          Log.e("Meetups", "Error uploading photo", e)
+          handler.sendMessage(Message.obtain(handler, DISMISS, loading))
+          handler.sendMessage(Message.obtain(handler, FAILED, index))
       }
-      image_f.delete()
-    } catch {
-      case e => 
-        Log.e("Meetups", "Error uploading photo", e)
-        retry_event_idx = index
-        showDialog(FAILED_DIALOG)
     }
   }
+  val DISMISS = 1
+  val FAILED = 0
+  val handler = new Handler(new Handler.Callback {
+    def handleMessage(message: Message) = (message.what, message.obj) match {
+      case (DISMISS, dialog: ProgressDialog) => 
+        dialog.dismiss()
+        true
+      case (FAILED, event_index: Integer) => 
+        failed_dialog(event_index.intValue)
+        true
+      case _ => false
+    }
+  })
   
-  var retry_event_idx = 0
-  
-  override def onCreateDialog(id: Int) = id match {
-    case FAILED_DIALOG => new AlertDialog.Builder(this)
+  def failed_dialog(event_index: Int) {
+    new AlertDialog.Builder(this)
       .setTitle(R.string.upload_failed_title)
       .setMessage(R.string.upload_failed)
       .setPositiveButton("Retry", new DialogInterface.OnClickListener {
-        def onClick(dialog: DialogInterface, which: Int) { try_upload(retry_event_idx) }
+        def onClick(dialog: DialogInterface, which: Int) { try_upload(event_index) }
       })
       .setNeutralButton("Okay", new DialogInterface.OnClickListener {
         def onClick(dialog: DialogInterface, which: Int) { image_f.delete() }
@@ -91,8 +107,11 @@ class Meetups extends ListActivity {
         def onCancel(dialog: DialogInterface) { image_f.delete() }
       })
       .create()
+      .show()
   }
   
+  def loading_dialog = ProgressDialog.show(Meetups.this, "", "Posting photo to Meetup", true)
+
   override def onCreateOptionsMenu(menu: Menu) = {
     getMenuInflater.inflate(R.menu.main_menu, menu)
     true

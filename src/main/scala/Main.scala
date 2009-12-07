@@ -1,8 +1,7 @@
 package meetup.example
 
 import android.os.Bundle
-import android.view.Window
-import android.app.Activity
+import android.app.{Activity, ProgressDialog}
 import android.net.Uri
 import android.content.{SharedPreferences, Context, Intent}
 
@@ -54,7 +53,7 @@ class Main extends Activity {
   }
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.main);
+    ProgressDialog.show(this, "", "Authenticating with Meetup", true)
   }
   override def onResume() {
     super.onResume()
