@@ -14,7 +14,7 @@
         <data android:scheme="snapup"/>
       </intent-filter>
     </activity>
-    <activity android:theme="@android:style/Theme.NoTitleBar" android:name=".Meetups">
+    <activity android:theme="@android:style/Theme.NoTitleBar" android:name=".Meetups" android:configChanges="orientation|keyboardHidden">
       <intent-filter>
         <action android:name="android.intent.action.VIEW"/>
       </intent-filter>

@@ -2,7 +2,7 @@ package meetup.example
  
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
-import android.widget.{SimpleAdapter, ListView, Toast}
+import android.widget.{SimpleAdapter, ListView, Toast, EditText}
 import android.view.{View, Menu, MenuItem}
 import android.net.Uri
 import android.provider.MediaStore
@@ -42,6 +42,12 @@ class Meetups extends ListActivity {
     actor { handler.sendEmptyMessage(0) }
   }
   val image_f = new File(Environment.getExternalStorageDirectory, "snapup-temp.jpg")
+  val clean_on_cancel = new DialogInterface.OnCancelListener {
+    def onCancel(dialog: DialogInterface) { image_f.delete() }
+  }
+  val clean_on_click = new DialogInterface.OnClickListener {
+    def onClick(dialog: DialogInterface, which: Int) { image_f.delete() }
+  }
   
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), position)
@@ -50,32 +56,37 @@ class Meetups extends ListActivity {
     result match {
       case Activity.RESULT_OK =>
         val m = meetups(index)
+        val event_name = Event.name(m).head
+        val event_id = Event.id(m).head
         // insert as bitmap so gallery will own the file
         MediaStore.Images.Media.insertImage(
           getContentResolver(), BitmapFactory.decodeFile(image_f.getPath), 
-          Event.name(m).head, Event.group_name(m).head
+          event_name, Event.group_name(m).head
         )
-        try_upload(index)
-      case _ => Toast.makeText(this, R.string.post_cancelled, Toast.LENGTH_SHORT).show()
+        get_caption(event_name) { caption =>
+          try_upload(event_id, caption)
+        }
+      case _ => Toast.makeText(this, R.string.photo_cancelled, Toast.LENGTH_SHORT).show()
     }
   }
   
-  def try_upload(index: Int) {
+  def try_upload(event_id: String, caption: String) {
     val loading = loading_dialog
     actor {
+      def dismiss = handler.sendMessage(Message.obtain(handler, DISMISS, loading))
       try {
         Account.client(prefs) orElse { 
           error("somehow in Meetups#try_upload() without valid client")
         } foreach { cli =>
-          cli.call(PhotoUpload.event_id(Event.id(meetups(index)).head).photo(image_f))
+          cli.call(PhotoUpload.event_id(event_id).caption(caption).photo(image_f))
         }
         image_f.delete()
-        handler.sendMessage(Message.obtain(handler, DISMISS, loading))
+        dismiss
       } catch {
         case e => 
           Log.e("Meetups", "Error uploading photo", e)
-          handler.sendMessage(Message.obtain(handler, DISMISS, loading))
-          handler.sendMessage(Message.obtain(handler, FAILED, index))
+          dismiss
+          handler.sendMessage(Message.obtain(handler, FAILED, (event_id, caption)))
       }
     }
   }
@@ -86,31 +97,43 @@ class Meetups extends ListActivity {
       case (DISMISS, dialog: ProgressDialog) => 
         dialog.dismiss()
         true
-      case (FAILED, event_index: Integer) => 
-        failed_dialog(event_index.intValue)
+      case (FAILED, (event_id: String, caption: String)) => 
+        failed_dialog(event_id, caption)
         true
       case _ => false
     }
   })
   
-  def failed_dialog(event_index: Int) {
+  def get_caption[T](event_name: String)(block: String => Unit) {
+    val input = new EditText(this)
+    val dialog = new AlertDialog.Builder(this)
+      .setTitle(event_name)
+      .setMessage("Photo Caption: (optional)")
+      .setPositiveButton("Post", new DialogInterface.OnClickListener() {
+        def onClick(dialog: DialogInterface, button: Int) {
+          block(input.getText.toString)
+        }
+      }).setNegativeButton("Cancel", clean_on_click)
+      .setOnCancelListener(clean_on_cancel)
+      .create()
+    dialog.setView(input, 15, 15, 15, 15)
+    dialog.show()
+  }
+
+  def loading_dialog = ProgressDialog.show(Meetups.this, "", "Posting photo to Meetup", true)
+  
+  def failed_dialog(event_id: String, caption: String) {
     new AlertDialog.Builder(this)
       .setTitle(R.string.upload_failed_title)
       .setMessage(R.string.upload_failed)
       .setPositiveButton("Retry", new DialogInterface.OnClickListener {
-        def onClick(dialog: DialogInterface, which: Int) { try_upload(event_index) }
+        def onClick(dialog: DialogInterface, which: Int) { try_upload(event_id, caption) }
       })
-      .setNeutralButton("Okay", new DialogInterface.OnClickListener {
-        def onClick(dialog: DialogInterface, which: Int) { image_f.delete() }
-      })
-      .setOnCancelListener(new DialogInterface.OnCancelListener {
-        def onCancel(dialog: DialogInterface) { image_f.delete() }
-      })
+      .setNeutralButton("Okay", clean_on_click)
+      .setOnCancelListener(clean_on_cancel)
       .create()
       .show()
   }
-  
-  def loading_dialog = ProgressDialog.show(Meetups.this, "", "Posting photo to Meetup", true)
 
   override def onCreateOptionsMenu(menu: Menu) = {
     getMenuInflater.inflate(R.menu.main_menu, menu)
