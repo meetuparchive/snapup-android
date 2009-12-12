@@ -2,8 +2,8 @@ package meetup.example
  
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
-import android.widget.{SimpleAdapter, ListView, Toast, EditText}
-import android.view.{View, Menu, MenuItem}
+import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView}
+import android.view.{View, ViewGroup, Menu, MenuItem}
 import android.net.Uri
 import android.provider.MediaStore
 import android.content.{Intent, DialogInterface}
@@ -21,25 +21,23 @@ import net.liftweb.json.JsonAST._
 class Meetups extends ListActivity {
   lazy val prefs = new Prefs(this)
   implicit val http = new Http
-  lazy val meetups =
-    Response.results(JsonParser.parse(getIntent.getExtras.getString("meetups")))
+
+  lazy val meetups = Response.results(
+    JsonParser.parse(getIntent.getExtras.getString("meetups"))
+  ).toArray
   
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    val data = for (m <- meetups; name <- Event.name(m); group <- Event.group_name(m)) yield {
-      val map = new java.util.HashMap[String, String]
-      map.put("name", name)
-      map.put("group", group)
-      map
-    }
-
-    setListAdapter(new SimpleAdapter(this, 
-      java.util.Arrays.asList(data.toArray: _*),
-      android.R.layout.simple_list_item_2,
-      Array("name", "group"),
-      Array(android.R.id.text1, android.R.id.text2)
-    ))
-    actor { handler.sendEmptyMessage(0) }
+    setListAdapter(new ArrayAdapter(this, R.layout.row, meetups) {
+      override def getView(position: Int, convertView: View, parent: ViewGroup) = {
+        val row = View.inflate(Meetups.this, R.layout.row, null)
+        val set: View => String => Unit = { case tv: TextView => tv.setText }
+        val meetup = meetups(position)
+        Event.name(meetup).foreach(set(row.findViewById(R.id.event_name)))
+        Event.group_name(meetup).foreach(set(row.findViewById(R.id.group_name)))
+        row
+      }
+    })
   }
   val image_f = new File(Environment.getExternalStorageDirectory, "snapup-temp.jpg")
   val clean_on_cancel = new DialogInterface.OnCancelListener {

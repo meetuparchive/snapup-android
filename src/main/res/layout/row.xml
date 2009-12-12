@@ -1,0 +1,33 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+  android:orientation="horizontal"
+>
+  <ImageView
+    android:id="@+id/icon"
+    android:layout_width="90px"
+    android:paddingLeft="6px"
+    android:paddingRight="6px"
+    android:layout_height="wrap_content"
+    android:src="@drawable/snapup"
+  />
+  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="6px"
+  >
+    <TextView
+      android:id="@+id/event_name"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:textAppearance="?android:attr/textAppearanceMedium"
+    />
+    <TextView
+      android:id="@+id/group_name"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:textAppearance="?android:attr/textAppearanceSmall"
+    />
+  </LinearLayout>
+</LinearLayout>
