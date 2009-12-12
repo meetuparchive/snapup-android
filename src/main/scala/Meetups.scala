@@ -73,7 +73,7 @@ class Meetups extends ListActivity {
   def try_upload(event_id: String, caption: String) {
     val loading = loading_dialog
     actor {
-      def dismiss = handler.sendMessage(Message.obtain(handler, DISMISS, loading))
+      def dismiss = handler.sendMessage(Message.obtain(handler, 0, Dismiss(loading)))
       try {
         Account.client(prefs) orElse { 
           error("somehow in Meetups#try_upload() without valid client")
@@ -86,18 +86,18 @@ class Meetups extends ListActivity {
         case e => 
           Log.e("Meetups", "Error uploading photo", e)
           dismiss
-          handler.sendMessage(Message.obtain(handler, FAILED, (event_id, caption)))
+          handler.sendMessage(Message.obtain(handler, 0, UploadFailed(event_id, caption)))
       }
     }
   }
-  val DISMISS = 1
-  val FAILED = 0
+  case class Dismiss(dialog: AlertDialog)
+  case class UploadFailed(event_id: String, caption: String)
   val handler = new Handler(new Handler.Callback {
-    def handleMessage(message: Message) = (message.what, message.obj) match {
-      case (DISMISS, dialog: ProgressDialog) => 
+    def handleMessage(message: Message) = message.obj match {
+      case Dismiss(dialog) => 
         dialog.dismiss()
         true
-      case (FAILED, (event_id: String, caption: String)) => 
+      case UploadFailed(event_id, caption) => 
         failed_dialog(event_id, caption)
         true
       case _ => false
