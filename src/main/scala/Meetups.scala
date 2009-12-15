@@ -2,7 +2,7 @@ package meetup.example
  
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
-import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView}
+import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView, ImageView}
 import android.view.{View, ViewGroup, Menu, MenuItem}
 import android.net.Uri
 import android.provider.MediaStore
@@ -12,8 +12,10 @@ import android.util.Log
 
 import dispatch.meetup._
 import dispatch.Http
+import dispatch.Http._
 import java.io.File
 import scala.actors.Actor._
+import scala.actors.Futures._
 
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
@@ -35,6 +37,13 @@ class Meetups extends ListActivity {
         val meetup = meetups(position)
         Event.name(meetup).foreach(set(row.findViewById(R.id.event_name)))
         Event.group_name(meetup).foreach(set(row.findViewById(R.id.group_name)))
+        Event.photo_url(meetup).foreach { url =>
+          row.findViewById(R.id.icon) match {
+            case view: ImageView => view.setImageBitmap(http(url.replace('\\','/') >> { is =>
+              BitmapFactory.decodeStream(is)
+            }))
+          }
+        }
         row
       }
     })
