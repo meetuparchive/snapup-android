@@ -43,9 +43,7 @@ class Meetups extends ListActivity {
               val bitmap = http(url >> { is =>
                 BitmapFactory.decodeStream(is)
               })
-              handler.post(new Runnable{
-                def run { view.setImageBitmap(bitmap) }
-              })
+              post { view.setImageBitmap(bitmap) }
             }
           }
         }
@@ -85,7 +83,6 @@ class Meetups extends ListActivity {
   def try_upload(event_id: String, caption: String) {
     val loading = loading_dialog
     actor {
-      def dismiss = handler.sendMessage(Message.obtain(handler, 0, Dismiss(loading)))
       try {
         Account.client(prefs) orElse { 
           error("somehow in Meetups#try_upload() without valid client")
@@ -93,32 +90,21 @@ class Meetups extends ListActivity {
           cli.call(PhotoUpload.event_id(event_id).caption(caption).photo(image_f))
         }
         image_f.delete()
-        dismiss
+        post { loading.dismiss() }
       } catch {
         case e => 
           Log.e("Meetups", "Error uploading photo", e)
-          dismiss
-          handler.sendMessage(Message.obtain(handler, 0, UploadFailed(event_id, caption)))
+          post { loading.dismiss() }
+          post { failed_dialog(event_id, caption) }
       }
     }
   }
-  case class Draw(view: ImageView, image: Bitmap)
-  case class Dismiss(dialog: AlertDialog)
-  case class UploadFailed(event_id: String, caption: String)
-  val handler = new Handler(new Handler.Callback {
-    def handleMessage(message: Message) = message.obj match {
-      case Dismiss(dialog) => 
-        dialog.dismiss()
-        true
-      case UploadFailed(event_id, caption) => 
-        failed_dialog(event_id, caption)
-        true
-      case Draw(view, image) =>
-        view.setImageBitmap(image)
-        true
-      case _ => false
-    }
-  })
+  val handler = new Handler
+  def post(block: => Unit) { 
+    handler.post(new Runnable{
+      def run { block }
+    })
+  }
   
   def get_caption[T](event_name: String)(block: String => Unit) {
     val input = new EditText(this)
