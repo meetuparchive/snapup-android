@@ -7,7 +7,7 @@ import android.view.{View, ViewGroup, Menu, MenuItem}
 import android.net.Uri
 import android.provider.MediaStore
 import android.content.{Intent, DialogInterface}
-import android.graphics.BitmapFactory
+import android.graphics.{BitmapFactory,Bitmap}
 import android.util.Log
 
 import dispatch.meetup._
@@ -22,7 +22,7 @@ import net.liftweb.json.JsonAST._
  
 class Meetups extends ListActivity {
   lazy val prefs = new Prefs(this)
-  implicit val http = new Http
+  implicit def http = new Http
 
   lazy val meetups = Response.results(
     JsonParser.parse(getIntent.getExtras.getString("meetups"))
@@ -39,9 +39,14 @@ class Meetups extends ListActivity {
         Event.group_name(meetup).foreach(set(row.findViewById(R.id.group_name)))
         Event.photo_url(meetup).foreach { url =>
           row.findViewById(R.id.icon) match {
-            case view: ImageView => view.setImageBitmap(http(url.replace('\\','/') >> { is =>
-              BitmapFactory.decodeStream(is)
-            }))
+            case view: ImageView => actor {
+              val bitmap = http(url >> { is =>
+                BitmapFactory.decodeStream(is)
+              })
+              handler.post(new Runnable{
+                def run { view.setImageBitmap(bitmap) }
+              })
+            }
           }
         }
         row
@@ -97,6 +102,7 @@ class Meetups extends ListActivity {
       }
     }
   }
+  case class Draw(view: ImageView, image: Bitmap)
   case class Dismiss(dialog: AlertDialog)
   case class UploadFailed(event_id: String, caption: String)
   val handler = new Handler(new Handler.Callback {
@@ -106,6 +112,9 @@ class Meetups extends ListActivity {
         true
       case UploadFailed(event_id, caption) => 
         failed_dialog(event_id, caption)
+        true
+      case Draw(view, image) =>
+        view.setImageBitmap(image)
         true
       case _ => false
     }
