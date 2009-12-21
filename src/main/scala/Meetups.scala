@@ -94,8 +94,10 @@ class Meetups extends ListActivity {
       } catch {
         case e => 
           Log.e("Meetups", "Error uploading photo", e)
-          post { loading.dismiss() }
-          post { failed_dialog(event_id, caption) }
+          post {
+            loading.dismiss()
+            failed_dialog(event_id, caption)
+          }
       }
     }
   }
