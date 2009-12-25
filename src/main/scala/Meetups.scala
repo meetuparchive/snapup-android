@@ -13,6 +13,7 @@ import android.util.Log
 import dispatch.meetup._
 import dispatch.Http
 import dispatch.Http._
+import dispatch.mime.Mime._
 import java.io.File
 import scala.actors.Actor._
 import scala.actors.Futures._
@@ -87,7 +88,11 @@ class Meetups extends ListActivity {
         Account.client(prefs) orElse { 
           error("somehow in Meetups#try_upload() without valid client")
         } foreach { cli =>
-          cli.call(PhotoUpload.event_id(event_id).caption(caption).photo(image_f))
+          http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f) andThen { req =>
+            req >?> { bytes =>
+              post { loading.setProgress(bytes.toInt) }
+            }
+          }) >| )
         }
         image_f.delete()
         post { loading.dismiss() }
@@ -122,7 +127,14 @@ class Meetups extends ListActivity {
     dialog.show()
   }
 
-  def loading_dialog = ProgressDialog.show(Meetups.this, "", "Posting photo to Meetup", true)
+  def loading_dialog = {
+    val progressDialog = new ProgressDialog(Meetups.this)
+    progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+    progressDialog.setTitle("Posting Photo to Meetup")
+    progressDialog.setMax(image_f.length.toInt)
+    progressDialog.show()
+    progressDialog
+  }
   
   def failed_dialog(event_id: String, caption: String) {
     new AlertDialog.Builder(this)
