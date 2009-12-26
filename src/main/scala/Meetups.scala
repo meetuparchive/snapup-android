@@ -88,11 +88,11 @@ class Meetups extends ListActivity {
         Account.client(prefs) orElse { 
           error("somehow in Meetups#try_upload() without valid client")
         } foreach { cli =>
-          http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f) andThen { req =>
-            req >?> { bytes =>
-              post { loading.setProgress(bytes.toInt) }
-            }
-          }) >| )
+          http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { 
+            (n, tot) =>
+              if (tot > 0 && (tot - n) % (tot / loading_inc) == 0)
+                post { loading.setProgress((n * loading_inc / tot).toInt) }
+          } >| )
         }
         image_f.delete()
         post { loading.dismiss() }
@@ -126,12 +126,12 @@ class Meetups extends ListActivity {
     dialog.setView(input, 15, 15, 15, 15)
     dialog.show()
   }
-
+  val loading_inc = 1000
   def loading_dialog = {
     val progressDialog = new ProgressDialog(Meetups.this)
     progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
     progressDialog.setTitle("Posting Photo to Meetup")
-    progressDialog.setMax(image_f.length.toInt)
+    progressDialog.setMax(loading_inc)
     progressDialog.show()
     progressDialog
   }
