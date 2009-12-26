@@ -1,9 +1,11 @@
 package meetup.example
 
 import android.os.Bundle
-import android.app.{Activity, ProgressDialog}
+import android.app.{Activity, AlertDialog, ProgressDialog}
 import android.net.Uri
 import android.content.{SharedPreferences, Context, Intent}
+import android.util.Log
+import android.content.DialogInterface
 
 import scala.actors.Actor._
 
@@ -29,7 +31,7 @@ object Account {
   def client(prefs: Prefs) = tokens(prefs.access) map { access => OAuthClient(consumer, access) }
 }
 
-class Main extends Activity {
+class Main extends ScalaActivity {
   implicit val http = new Http
   lazy val prefs = new Prefs(this)
 
@@ -55,11 +57,12 @@ class Main extends Activity {
   }
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    ProgressDialog.show(this, "", "Authenticating with Meetup", true)
+    auth_dialog
   }
+  lazy val auth_dialog = ProgressDialog.show(this, "", "Authenticating with Meetup", true)
   override def onResume() {
     super.onResume()
-    actor {
+    actor { try {
       Account.tokens(prefs.access) match {
         case None => 
           getIntent.getData match {
@@ -74,6 +77,17 @@ class Main extends Activity {
           }
         case Some(at) => fetch_meetups(at)
       }
-    }
+    } catch {
+      case e => post { 
+        Log.e("Main", "Error Authenticating with Meetup", e)
+        auth_dialog.dismiss()
+        new AlertDialog.Builder(Main.this)
+          .setTitle("Connection Error")
+          .setMessage("Snapup requires a network connection to retrieve your Meetups.")
+          .setNeutralButton("Exit", Main.this.finish())
+          .setOnCancelListener(Main.this.finish())
+          .show()
+      }
+    }} // /catch /actor
   }
 }

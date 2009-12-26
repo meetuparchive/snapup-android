@@ -21,7 +21,7 @@ import scala.actors.Futures._
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
  
-class Meetups extends ListActivity {
+class Meetups extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
   implicit def http = new Http
 
@@ -53,12 +53,7 @@ class Meetups extends ListActivity {
     })
   }
   val image_f = new File(Environment.getExternalStorageDirectory, "snapup-temp.jpg")
-  val clean_on_cancel = new DialogInterface.OnCancelListener {
-    def onCancel(dialog: DialogInterface) { image_f.delete() }
-  }
-  val clean_on_click = new DialogInterface.OnClickListener {
-    def onClick(dialog: DialogInterface, which: Int) { image_f.delete() }
-  }
+  def clean_image() { image_f.delete() }
   
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), position)
@@ -111,12 +106,6 @@ class Meetups extends ListActivity {
       }
     }
   }
-  val handler = new Handler
-  def post(block: => Unit) { 
-    handler.post(new Runnable{
-      def run { block }
-    })
-  }
   
   def get_caption[T](event_name: String)(block: String => Unit) {
     val input = new EditText(this)
@@ -127,8 +116,8 @@ class Meetups extends ListActivity {
         def onClick(dialog: DialogInterface, button: Int) {
           block(input.getText.toString)
         }
-      }).setNegativeButton("Cancel", clean_on_click)
-      .setOnCancelListener(clean_on_cancel)
+      }).setNegativeButton("Cancel", clean_image())
+      .setOnCancelListener(clean_image())
       .create()
     dialog.setView(input, 15, 15, 15, 15)
     dialog.show()
@@ -150,8 +139,8 @@ class Meetups extends ListActivity {
       .setPositiveButton("Retry", new DialogInterface.OnClickListener {
         def onClick(dialog: DialogInterface, which: Int) { try_upload(event_id, caption) }
       })
-      .setNeutralButton("Okay", clean_on_click)
-      .setOnCancelListener(clean_on_cancel)
+      .setNeutralButton("Okay", clean_image())
+      .setOnCancelListener(clean_image())
       .create()
       .show()
   }
