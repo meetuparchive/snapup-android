@@ -14,7 +14,7 @@ import dispatch.meetup._
 import dispatch.Http
 import dispatch.Http._
 import dispatch.mime.Mime._
-import java.io.File
+import java.io.{File,FileOutputStream}
 import scala.actors.Actor._
 import scala.actors.Futures._
 
@@ -70,10 +70,15 @@ class Meetups extends ListActivity {
         val event_name = Event.name(m).head
         val event_id = Event.id(m).head
         // insert as bitmap so gallery will own the file
-        MediaStore.Images.Media.insertImage(
-          getContentResolver(), BitmapFactory.decodeFile(image_f.getPath), 
-          event_name, Event.group_name(m).head
-        )
+        val bitmap = BitmapFactory.decodeFile(image_f.getPath)
+        MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, event_name, Event.group_name(m).head)
+        // save with max width for upload
+        val max = 800
+        if (bitmap.getWidth > max) {
+          val smaller = Bitmap.createScaledBitmap(bitmap, max,
+            (max.toFloat / bitmap.getWidth * bitmap.getHeight).toInt, true)
+          smaller.compress(Bitmap.CompressFormat.JPEG, 85, new FileOutputStream(image_f))
+        }
         get_caption(event_name) { caption =>
           try_upload(event_id, caption)
         }
