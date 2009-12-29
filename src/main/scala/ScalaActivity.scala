@@ -1,4 +1,4 @@
-package meetup.example
+package snapup
 
 import android.os.Handler
 import android.app.Activity

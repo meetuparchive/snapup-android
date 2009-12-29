@@ -1,4 +1,4 @@
-package meetup.example
+package snapup
 
 import android.os.Bundle
 import android.app.{Activity, AlertDialog, ProgressDialog}
