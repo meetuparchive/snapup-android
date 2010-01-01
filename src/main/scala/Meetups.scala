@@ -82,16 +82,21 @@ class Meetups extends ListActivity with ScalaActivity {
   }
   
   def try_upload(event_id: String, caption: String) {
-    val loading = loading_dialog
+    val loading = new ProgressDialog(Meetups.this)
+    loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+    loading.setTitle("Posting Photo to Meetup")
+    loading.show()
     actor {
       try {
         Account.client(prefs) orElse { 
           error("somehow in Meetups#try_upload() without valid client")
         } foreach { cli =>
-          http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { 
-            (n, tot) =>
-              if (tot > 0 && (tot - n) % (tot / loading_inc) == 0)
-                post { loading.setProgress((n * loading_inc / tot).toInt) }
+          http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { total => 
+            post { loading.setMax(total.toInt) }
+            val inc = total / 1000
+            (bytes) => {
+              if ((total - bytes) % inc == 0) post { loading.setProgress(bytes.toInt) } 
+            }
           } >| )
         }
         image_f.delete()
@@ -121,15 +126,6 @@ class Meetups extends ListActivity with ScalaActivity {
       .create()
     dialog.setView(input, 15, 15, 15, 15)
     dialog.show()
-  }
-  val loading_inc = 1000
-  def loading_dialog = {
-    val progressDialog = new ProgressDialog(Meetups.this)
-    progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-    progressDialog.setTitle("Posting Photo to Meetup")
-    progressDialog.setMax(loading_inc)
-    progressDialog.show()
-    progressDialog
   }
   
   def failed_dialog(event_id: String, caption: String) {
