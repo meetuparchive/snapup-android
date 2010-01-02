@@ -93,9 +93,7 @@ class Meetups extends ListActivity with ScalaActivity {
         } foreach { cli =>
           http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { total => 
             post { loading.setMax(total.toInt) }
-            (bytes) => {
-              post { loading.setProgress(bytes.toInt) } 
-            }
+            (bytes) => { post { loading.setProgress(bytes.toInt) } }
           } >| )
         }
         image_f.delete()
