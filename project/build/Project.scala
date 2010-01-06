@@ -5,7 +5,7 @@ class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo)
   override def androidPlatformName="android-1.6"
 
   val databinder_net = "databinder.net repository" at "http://databinder.net/repo"
-  lazy val meetup = "net.databinder" %% "dispatch-meetup" % "0.6.5"
+  lazy val meetup = "net.databinder" %% "dispatch-meetup" % "0.6.6-SNAPSHOT"
   override def proguardOption = """
     |-keep class dispatch.** { 
     |  public scala.Function1 *();
