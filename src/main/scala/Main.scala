@@ -32,7 +32,7 @@ object Account {
 }
 
 class Main extends ScalaActivity {
-  implicit val http = new Http
+  implicit val http = new Http with Threads
   lazy val prefs = new Prefs(this)
 
   def write(sp: SharedPreferences, token: Token) = {
