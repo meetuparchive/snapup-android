@@ -7,8 +7,6 @@ import android.content.{SharedPreferences, Context, Intent}
 import android.util.Log
 import android.content.DialogInterface
 
-import scala.actors.Actor._
-
 import dispatch._
 import oauth._
 import meetup._
@@ -50,10 +48,12 @@ class Main extends ScalaActivity {
   }
   def fetch_meetups(at: Token) {
     val cli = Account.client(at)
-    val (member, _) = cli.call(Members.self)
-    val id = member flatMap Member.id
-    val json =  http(cli(Events.member_id(id.head).status(Event.Past, Event.Upcoming)) as_str)
-    startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
+    http.future(cli(Members.self) ># { json =>
+      val List(id) = Response.results(json) >>= Member.id
+      http(cli(Events.member_id(id).status(Event.Past, Event.Upcoming)) >- { json =>
+        startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
+      })
+    })
   }
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -62,23 +62,26 @@ class Main extends ScalaActivity {
   lazy val auth_dialog = ProgressDialog.show(this, "", "Authenticating with Meetup", true)
   override def onResume() {
     super.onResume()
-    actor { try {
+    try {
       Account.tokens(prefs.access) match {
         case None => 
           getIntent.getData match {
             case null =>
-              authorize(write(prefs.request, http(Auth.request_token(Account.consumer))))
+              http.future(Auth.request_token(Account.consumer) ~> { token =>
+                authorize(write(prefs.request, token))
+              })
             case uri => 
               Account.tokens(prefs.request) filter { 
                 _.value == uri.getQueryParameter("oauth_token") 
-              } foreach { rt =>
-                fetch_meetups(write(prefs.access, http(Auth.access_token(Account.consumer, rt))))
-              }
+              } foreach { rt => http.future(Auth.access_token(Account.consumer, rt) ~> { token: oauth.Token =>
+                fetch_meetups(write(prefs.access, token))
+              })
+            }
           }
         case Some(at) => fetch_meetups(at)
       }
     } catch {
-      case e => post { 
+      case e => 
         Log.e("Main", "Error Authenticating with Meetup", e)
         auth_dialog.dismiss()
         new AlertDialog.Builder(Main.this)
@@ -87,7 +90,6 @@ class Main extends ScalaActivity {
           .setNeutralButton("Exit", Main.this.finish())
           .setOnCancelListener(Main.this.finish())
           .show()
-      }
-    }} // /catch /actor
+    } // /catch
   }
 }
