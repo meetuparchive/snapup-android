@@ -28,9 +28,16 @@ object Account {
   def client(access: Token) = OAuthClient(consumer, access)
   def client(prefs: Prefs) = tokens(prefs.access) map { access => OAuthClient(consumer, access) }
 }
+object AndroidHttp extends Http with Threads {
+  override lazy val log = new Logger {
+    def info(msg: String, items: Any*) { 
+      Log.i("Main", "INF: [android logger] dispatch: " + msg.format(items: _*)) 
+    }
+  }
+}
 
 class Main extends ScalaActivity {
-  implicit val http = new Http with Threads
+  implicit val http = AndroidHttp
   lazy val prefs = new Prefs(this)
 
   def write(sp: SharedPreferences, token: Token) = {

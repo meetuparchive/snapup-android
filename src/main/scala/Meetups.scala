@@ -18,14 +18,13 @@ import dispatch.Http._
 import dispatch.mime.Mime._
 import java.io.{File,FileOutputStream}
 import scala.actors.Actor._
-import scala.actors.Futures._
 
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
- 
+
 class Meetups extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
-  implicit def http = new Http
+  implicit val http = AndroidHttp
 
   lazy val meetups = Response.results(
     JsonParser.parse(getIntent.getExtras.getString("meetups"))
@@ -42,12 +41,9 @@ class Meetups extends ListActivity with ScalaActivity {
         Event.group_name(meetup).foreach(set(row.findViewById(R.id.group_name)))
         Event.photo_url(meetup).foreach { url =>
           row.findViewById(R.id.icon) match {
-            case view: ImageView => actor {
-              val bitmap = http(url >> { is =>
-                BitmapFactory.decodeStream(is)
-              })
-              post { view.setImageBitmap(bitmap) }
-            }
+            case view: ImageView => http.future(url >> { is =>
+              post { view.setImageBitmap(BitmapFactory.decodeStream(is)) }
+            })
           }
         }
         row
