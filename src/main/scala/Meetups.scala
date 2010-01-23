@@ -1,5 +1,7 @@
-package meetup.example
- 
+package snapup
+
+import com.meetup.snapup.R
+
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
 import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView, ImageView}

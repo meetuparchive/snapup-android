@@ -1,4 +1,4 @@
-package meetup.example
+package snapup
 
 import android.os.Bundle
 import android.app.{Activity, AlertDialog, ProgressDialog}
@@ -52,7 +52,7 @@ class Main extends ScalaActivity {
     val cli = Account.client(at)
     val (member, _) = cli.call(Members.self)
     val id = member flatMap Member.id
-    val json =  http(cli(Events.member_id(id.head)) as_str)
+    val json =  http(cli(Events.member_id(id.head).status(Event.Past, Event.Upcoming)) as_str)
     startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
   }
   override def onCreate(savedInstanceState: Bundle) {
