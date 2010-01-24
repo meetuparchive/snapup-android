@@ -61,7 +61,7 @@ class Main extends ScalaActivity {
   
   def authorize(rt: Token) {
     val intent = new Intent(Intent.ACTION_VIEW)
-    intent.setData(Uri.parse((Auth.m_authorize_url(rt) <<? Auth.callback("snapup:///") to_uri).toString))
+    intent.setData(Uri.parse(Auth.m_authorize_url(rt).to_uri.toString))
     startActivity(intent)
   }
   def fetch_meetups(at: Token) {
@@ -84,15 +84,17 @@ class Main extends ScalaActivity {
       case None => 
         getIntent.getData match {
           case null =>
-            http.future(Auth.request_token(Account.consumer) ~> { token =>
+            http.future(Auth.request_token(Account.consumer, "snapup:///") ~> { token =>
               authorize(write(prefs.request, token))
             })
           case uri => 
             Account.tokens(prefs.request) filter { 
               _.value == uri.getQueryParameter("oauth_token") 
-            } foreach { rt => http.future(Auth.access_token(Account.consumer, rt) ~> { token: oauth.Token =>
-              fetch_meetups(write(prefs.access, token))
-            })
+            } foreach { rt => http.future(
+              Auth.access_token(Account.consumer, rt, uri.getQueryParameter("oauth_verifier")) ~> { token: oauth.Token =>
+                fetch_meetups(write(prefs.access, token))
+              }
+            )
           }
         }
       case Some(at) => fetch_meetups(at)

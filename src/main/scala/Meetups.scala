@@ -42,7 +42,8 @@ class Meetups extends ListActivity with ScalaActivity {
         Event.photo_url(meetup).foreach { url =>
           row.findViewById(R.id.icon) match {
             case view: ImageView => http.future(url >> { is =>
-              post { view.setImageBitmap(BitmapFactory.decodeStream(is)) }
+              val bitmap = BitmapFactory.decodeStream(is)
+              post { view.setImageBitmap(bitmap) }
             })
           }
         }
