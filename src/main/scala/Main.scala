@@ -70,6 +70,7 @@ class Main extends ScalaActivity {
       val List(id) = Response.results(json) >>= Member.id
       http(cli(Events.member_id(id).status(Event.Past, Event.Upcoming)) >- { json =>
         startActivity(new Intent(Main.this, classOf[Meetups]).putExtra("meetups", json))
+        Main.this.finish()
       })
     })
   }
