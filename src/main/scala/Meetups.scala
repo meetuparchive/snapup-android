@@ -24,7 +24,7 @@ import net.liftweb.json.JsonAST._
 
 class Meetups extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
-  implicit val http = AndroidHttp
+  val http = AndroidHttp
 
   lazy val meetups = Response.results(
     JsonParser.parse(getIntent.getExtras.getString("meetups"))
@@ -84,27 +84,23 @@ class Meetups extends ListActivity with ScalaActivity {
     loading.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
     loading.setTitle("Posting Photo to Meetup")
     loading.show()
-    actor {
-      try {
-        Account.client(prefs) orElse { 
-          error("somehow in Meetups#try_upload() without valid client")
-        } foreach { cli =>
-          http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { total => 
-            post { loading.setMax(total.toInt) }
-            (bytes) => { post { loading.setProgress(bytes.toInt) } }
-          } >| )
+    val Some(cli) = Account.client(prefs)
+    http on_error {
+      case e => 
+        Log.e("Meetups", "Error uploading photo", e)
+        post {
+          loading.dismiss()
+          failed_dialog(event_id, caption)
         }
+    } future (
+      cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { total => 
+        post { loading.setMax(total.toInt) }
+        (bytes) => { post { loading.setProgress(bytes.toInt) } }
+      } >> { stm =>
         image_f.delete()
         post { loading.dismiss() }
-      } catch {
-        case e => 
-          Log.e("Meetups", "Error uploading photo", e)
-          post {
-            loading.dismiss()
-            failed_dialog(event_id, caption)
-          }
       }
-    }
+    )
   }
   
   def get_caption[T](event_name: String)(block: String => Unit) {
