@@ -17,7 +17,6 @@ import dispatch.Http
 import dispatch.Http._
 import dispatch.mime.Mime._
 import java.io.{File,FileOutputStream}
-import scala.actors.Actor._
 
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
