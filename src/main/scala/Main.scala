@@ -37,7 +37,18 @@ object AndroidHttp extends Http with Threads {
 }
 
 class Main extends ScalaActivity {
-  implicit val http = AndroidHttp
+  val http = AndroidHttp.on_error {
+    case e => post {
+      Log.e("Main", "Error Authenticating with Meetup", e)
+      auth_dialog.dismiss()
+      new AlertDialog.Builder(Main.this)
+        .setTitle("Connection Error")
+        .setMessage("Snapup requires a network connection to retrieve your Meetups.")
+        .setNeutralButton("Exit", Main.this.finish())
+        .setOnCancelListener(Main.this.finish())
+        .show()
+    }
+  }
   lazy val prefs = new Prefs(this)
 
   def write(sp: SharedPreferences, token: Token) = {
@@ -69,34 +80,22 @@ class Main extends ScalaActivity {
   lazy val auth_dialog = ProgressDialog.show(this, "", "Authenticating with Meetup", true)
   override def onResume() {
     super.onResume()
-    try {
-      Account.tokens(prefs.access) match {
-        case None => 
-          getIntent.getData match {
-            case null =>
-              http.future(Auth.request_token(Account.consumer) ~> { token =>
-                authorize(write(prefs.request, token))
-              })
-            case uri => 
-              Account.tokens(prefs.request) filter { 
-                _.value == uri.getQueryParameter("oauth_token") 
-              } foreach { rt => http.future(Auth.access_token(Account.consumer, rt) ~> { token: oauth.Token =>
-                fetch_meetups(write(prefs.access, token))
-              })
-            }
+    Account.tokens(prefs.access) match {
+      case None => 
+        getIntent.getData match {
+          case null =>
+            http.future(Auth.request_token(Account.consumer) ~> { token =>
+              authorize(write(prefs.request, token))
+            })
+          case uri => 
+            Account.tokens(prefs.request) filter { 
+              _.value == uri.getQueryParameter("oauth_token") 
+            } foreach { rt => http.future(Auth.access_token(Account.consumer, rt) ~> { token: oauth.Token =>
+              fetch_meetups(write(prefs.access, token))
+            })
           }
-        case Some(at) => fetch_meetups(at)
-      }
-    } catch {
-      case e => 
-        Log.e("Main", "Error Authenticating with Meetup", e)
-        auth_dialog.dismiss()
-        new AlertDialog.Builder(Main.this)
-          .setTitle("Connection Error")
-          .setMessage("Snapup requires a network connection to retrieve your Meetups.")
-          .setNeutralButton("Exit", Main.this.finish())
-          .setOnCancelListener(Main.this.finish())
-          .show()
-    } // /catch
+        }
+      case Some(at) => fetch_meetups(at)
+    }
   }
 }
