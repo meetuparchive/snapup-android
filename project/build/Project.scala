@@ -2,7 +2,8 @@ import sbt._
 
 class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) with MarketPublish {    
   def androidPlatformName="android-1.6"
-  def key_alias = "mykey"
+  def keyalias = "snapup"
+  override def keystorePath = Path.userHome / "meetup.keystore"
 
   val databinder_net = "databinder.net repository" at "http://databinder.net/repo"
   lazy val meetup = "net.databinder" %% "dispatch-meetup" % "0.7.0-beta1"
