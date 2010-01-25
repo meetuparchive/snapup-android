@@ -1,7 +1,6 @@
 import sbt._
 
 class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) {    
-  override def androidSdkPath = Path.fromFile("/usr/local/android-sdk/")
   override def androidPlatformName="android-1.6"
 
   val databinder_net = "databinder.net repository" at "http://databinder.net/repo"
