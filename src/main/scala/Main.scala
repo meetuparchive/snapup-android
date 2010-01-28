@@ -21,9 +21,8 @@ class Prefs(context: Context) {
 }
 
 object Account {
-  def tokens(sp: SharedPreferences) = Token(
-    new scala.collection.jcl.MapWrapper[String, Any] { def underlying = sp.getAll.asInstanceOf[java.util.Map[String,Any]] }
-  )
+  import scala.collection.JavaConversions._
+  def tokens(sp: SharedPreferences) = Token(sp.getAll.asInstanceOf[java.util.Map[String,Any]])
   val consumer = Consumer("72DA10F33DB36B11DA502251ED135E76","F6805ED5DB63D7AFE9BF0506B6430CF2")
   def client(access: Token) = OAuthClient(consumer, access)
   def client(prefs: Prefs) = tokens(prefs.access) map { access => OAuthClient(consumer, access) }
