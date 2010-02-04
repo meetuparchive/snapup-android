@@ -54,7 +54,9 @@ class Meetups extends ListActivity with ScalaActivity {
   def clean_image() { image_f.delete() }
   
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
-    startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), position)
+    val List(event_id) = Event.id(meetups(position))
+    startActivity(new Intent(Meetups.this, classOf[Members]).putExtra("event_id", event_id))
+//    startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), position)
   }
   override def onActivityResult(index: Int, result: Int, intent: Intent) {
     result match {
