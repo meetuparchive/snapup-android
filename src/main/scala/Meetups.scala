@@ -55,7 +55,11 @@ class Meetups extends ListActivity with ScalaActivity {
   
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     val List(event_id) = Event.id(meetups(position))
-    startActivity(new Intent(Meetups.this, classOf[Members]).putExtra("event_id", event_id))
+    val List(event_name) = Event.name(meetups(position))
+    startActivity(new Intent(Meetups.this, classOf[Members])
+      .putExtra("event_id", event_id)
+      .putExtra("event_name", event_name)
+    )
 //    startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), position)
   }
   override def onActivityResult(index: Int, result: Int, intent: Intent) {
