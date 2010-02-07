@@ -19,6 +19,9 @@ trait ScalaActivity extends Activity {
   implicit def f2click(block: => Unit) = new DialogInterface.OnClickListener {
     def onClick(dialog: DialogInterface, which: Int) { block }
   }
+  implicit def f2dismissal(block: => Unit) = new DialogInterface.OnDismissListener {
+    def onDismiss(dialog: DialogInterface) { block }
+  }
   implicit def f2viewclick(block: => Unit) = new View.OnClickListener {
     def onClick(view: View) { block }
   }

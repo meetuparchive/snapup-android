@@ -110,7 +110,10 @@ class Members extends ListActivity with ScalaActivity {
         (bytes) => { post { loading.setProgress(bytes.toInt) } }
       } >> { stm =>
         image_f.delete()
-        post { loading.dismiss() }
+        post { 
+          loading.dismiss() 
+          Toast.makeText(this, R.string.photo_uploaded, Toast.LENGTH_LONG).show()
+        }
       }
     )
   }
@@ -127,6 +130,7 @@ class Members extends ListActivity with ScalaActivity {
       }).setNegativeButton("Cancel", clean_image())
       .setOnCancelListener(clean_image())
       .create()
+    dialog.setOnDismissListener(input.setVisibility(View.GONE))
     dialog.setView(input, 15, 15, 15, 15)
     dialog.show()
   }

@@ -1,6 +1,7 @@
 <resources>
   <string name="app_name">Snapup</string>
   <string name="photo_cancelled">Snapshot Cancelled</string>
+  <string name="photo_uploaded">Photo posted to Meetup</string>
   <string name="upload_failed_title">Post Failed</string>
   <string name="upload_failed">Unable to transfer photo.</string>
 </resources>
