@@ -5,18 +5,19 @@
 >
   <ImageView
     android:id="@+id/icon"
-    android:paddingTop="8px"
-    android:paddingBottom="8px"
-    android:paddingRight="6px"
-    android:layout_width="90px"
-    android:layout_height="110px"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
+    android:paddingRight="4dp"
+    android:layout_width="70dp"
+    android:layout_height="85dp"
     android:src="@drawable/snapup"
   />
   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="6px"
+    android:layout_gravity="center_vertical"
+    android:paddingBottom="6dp"
   >
     <TextView
       android:id="@+id/event_name"

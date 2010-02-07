@@ -4,10 +4,28 @@
   android:layout_width="fill_parent" 
   android:layout_height="fill_parent">
   <TextView
-    android:id="@+id/members_event_name"
+    android:id="@+id/event_name"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:textAppearance="?android:attr/textAppearanceLarge"
+  />
+  <TextView
+    android:id="@+id/group_name"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:textAppearance="?android:attr/textAppearanceMedium"
+  />
+  <TextView
+    android:id="@+id/event_time"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:textAppearance="?android:attr/textAppearanceSmall"
+    android:paddingBottom="6dp"
+  />
+  <Button android:id="@+id/button"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:text="Snap a Photo"
   />
   <ListView android:id="@id/android:list"
     android:layout_width="fill_parent" 
