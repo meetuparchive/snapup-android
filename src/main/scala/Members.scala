@@ -45,25 +45,26 @@ class Members extends ListActivity with ScalaActivity {
       val rsvps = Response.results(json).filter { rsvp =>
         Rsvp.response(rsvp) exists { r => r == "yes" || r == "maybe" }
       }.toArray
-      post { setListAdapter(new ArrayAdapter(this, R.layout.row, rsvps) {
-        override def getView(position: Int, convertView: View, parent: ViewGroup) = {
-          val row = View.inflate(Members.this, R.layout.row, null)
-          val rsvp = rsvps(position)
-          Rsvp.name(rsvp).foreach(text_in(row)(R.id.event_name))
-          Rsvp.response(rsvp).filter { _ == "maybe" }.foreach(text_in(row)(R.id.group_name))
-          Rsvp.photo_url(rsvp).foreach { url =>
-            row.findViewById(R.id.icon) match {
-              case view: ImageView => http.future(url >> { is =>
-                val bitmap = BitmapFactory.decodeStream(is)
-                post { view.setImageBitmap(bitmap) }
-              })
+      post { 
+        setListAdapter(new ArrayAdapter(this, R.layout.row, rsvps) {
+          override def getView(position: Int, convertView: View, parent: ViewGroup) = {
+            val row = View.inflate(Members.this, R.layout.row, null)
+            val rsvp = rsvps(position)
+            Rsvp.name(rsvp).foreach(text_in(row)(R.id.event_name))
+            Rsvp.response(rsvp).filter { _ == "maybe" }.foreach(text_in(row)(R.id.group_name))
+            Rsvp.photo_url(rsvp).foreach { url =>
+              row.findViewById(R.id.icon) match {
+                case view: ImageView => http.future(url >> { is =>
+                  val bitmap = BitmapFactory.decodeStream(is)
+                  post { view.setImageBitmap(bitmap) }
+                })
+              }
             }
+            row
           }
-          row
-        }
-        override def areAllItemsEnabled = false
-        override def isEnabled(pos: Int) = false
-      })}
+          override def isEnabled(pos: Int) = false
+        })
+      }
     })
   }
 

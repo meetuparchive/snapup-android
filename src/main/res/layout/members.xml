@@ -29,5 +29,13 @@
   />
   <ListView android:id="@id/android:list"
     android:layout_width="fill_parent" 
-    android:layout_height="fill_parent"/>
+    android:layout_height="wrap_content"
+  />
+  <ProgressBar android:id="@id/android:empty"
+    android:paddingTop="30dp"
+    android:layout_gravity="center"
+    style="?android:attr/progressBarStyleLarge"
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+  />
 </LinearLayout>
