@@ -22,10 +22,10 @@
     android:textAppearance="?android:attr/textAppearanceSmall"
     android:paddingBottom="6dp"
   />
-  <Button android:id="@+id/button"
+  <Button android:id="@+id/snap_photo"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:text="Snap a Photo"
+    android:text="Snapup a Photo"
   />
   <ListView android:id="@id/android:list"
     android:layout_width="fill_parent" 

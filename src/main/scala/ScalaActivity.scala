@@ -19,6 +19,9 @@ trait ScalaActivity extends Activity {
   implicit def f2click(block: => Unit) = new DialogInterface.OnClickListener {
     def onClick(dialog: DialogInterface, which: Int) { block }
   }
+  implicit def f2viewclick(block: => Unit) = new View.OnClickListener {
+    def onClick(view: View) { block }
+  }
   def text_in(parent: { def findViewById(id: Int): View })(id: Int)(text: String) =
     parent.findViewById(id).asInstanceOf[TextView].setText(text)
 }
