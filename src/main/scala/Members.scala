@@ -29,17 +29,15 @@ class Members extends ListActivity with ScalaActivity {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.members)
     val Some(cli) = Account.client(prefs)
-    val set: View => String => Unit = { case tv: TextView => tv.setText }
-    set(findViewById(R.id.members_event_name))(getIntent.getExtras.getString("event_name"))
+    text_in(this)(R.id.members_event_name)(getIntent.getExtras.getString("event_name"))
     http.future(cli(Rsvps.event_id(getIntent.getExtras.getString("event_id"))) ># { json =>
       val rsvps = Response.results(json).toArray
       post { setListAdapter(new ArrayAdapter(this, R.layout.row, rsvps) {
         override def getView(position: Int, convertView: View, parent: ViewGroup) = {
           val row = View.inflate(Members.this, R.layout.row, null)
-          val set: View => String => Unit = { case tv: TextView => tv.setText }
           val rsvp = rsvps(position)
-          Rsvp.name(rsvp).foreach(set(row.findViewById(R.id.event_name)))
-          Rsvp.response(rsvp).foreach(set(row.findViewById(R.id.group_name)))
+          Rsvp.name(rsvp).foreach(text_in(row)(R.id.event_name))
+          Rsvp.response(rsvp).foreach(text_in(row)(R.id.group_name))
           Rsvp.photo_url(rsvp).foreach { url =>
             row.findViewById(R.id.icon) match {
               case view: ImageView => http.future(url >> { is =>

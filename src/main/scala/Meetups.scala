@@ -4,7 +4,7 @@ import com.meetup.snapup.R
 
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
-import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView, ImageView}
+import android.widget.{ArrayAdapter, ListView, Toast, EditText, ImageView}
 import android.view.{View, ViewGroup, Menu, MenuItem}
 import android.net.Uri
 import android.provider.MediaStore
@@ -34,10 +34,10 @@ class Meetups extends ListActivity with ScalaActivity {
     setListAdapter(new ArrayAdapter(this, R.layout.row, meetups) {
       override def getView(position: Int, convertView: View, parent: ViewGroup) = {
         val row = View.inflate(Meetups.this, R.layout.row, null)
-        val set: View => String => Unit = { case tv: TextView => tv.setText }
+        val row_text = text_in(row)_
         val meetup = meetups(position)
-        Event.name(meetup).foreach(set(row.findViewById(R.id.event_name)))
-        Event.group_name(meetup).foreach(set(row.findViewById(R.id.group_name)))
+        Event.name(meetup).foreach(row_text(R.id.event_name))
+        Event.group_name(meetup).foreach(row_text(R.id.group_name))
         Event.photo_url(meetup).foreach { url =>
           row.findViewById(R.id.icon) match {
             case view: ImageView => http.future(url >> { is =>

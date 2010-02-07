@@ -3,6 +3,8 @@ package snapup
 import android.os.Handler
 import android.app.Activity
 import android.content.DialogInterface
+import android.widget.TextView
+import android.view.View
 
 trait ScalaActivity extends Activity {
   val handler = new Handler
@@ -17,4 +19,6 @@ trait ScalaActivity extends Activity {
   implicit def f2click(block: => Unit) = new DialogInterface.OnClickListener {
     def onClick(dialog: DialogInterface, which: Int) { block }
   }
+  def text_in(parent: { def findViewById(id: Int): View })(id: Int)(text: String) =
+    parent.findViewById(id).asInstanceOf[TextView].setText(text)
 }
