@@ -12,6 +12,9 @@ class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo)
     |-keep class dispatch.** { 
     |  public scala.Function1 *();
     |}
+    |-keep class snapup.** { 
+    |  public scala.Function1 *();
+    |}
     |-keep class ** extends dispatch.Builder {
     |  public ** product();
     |}

@@ -2,7 +2,7 @@ package snapup
 
 import android.os.Handler
 import android.app.Activity
-import android.content.DialogInterface
+import android.content.{DialogInterface,SharedPreferences}
 import android.widget.TextView
 import android.view.View
 
@@ -27,4 +27,13 @@ trait ScalaActivity extends Activity {
   }
   def text_in(parent: { def findViewById(id: Int): View })(id: Int)(text: String) =
     parent.findViewById(id).asInstanceOf[TextView].setText(text)
+
+  implicit def sp2editing(sp: SharedPreferences) = new EditingContext(sp)
+  class EditingContext(sp: SharedPreferences) {
+    def editor(block: SharedPreferences.Editor => Unit) = {
+      val editor = sp.edit()
+      block(editor)
+      editor.commit()
+    }
+  }
 }

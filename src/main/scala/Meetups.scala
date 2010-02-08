@@ -5,7 +5,7 @@ import com.meetup.snapup.R
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
 import android.widget.{ArrayAdapter, ListView, Toast, EditText, ImageView}
-import android.view.{View, ViewGroup, Menu, MenuItem}
+import android.view.{View, ViewGroup, Menu, MenuItem, KeyEvent}
 import android.net.Uri
 import android.provider.MediaStore
 import android.content.{Intent, DialogInterface}
@@ -24,30 +24,33 @@ class Meetups extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
   val http = AndroidHttp
 
-  lazy val meetups = Response.results(
-    JsonParser.parse(getIntent.getExtras.getString("meetups"))
-  ).toArray
+  lazy val meetup_json = prefs.meetups.getString(prefs.today, "")
+  lazy val meetups =  Response.results(JsonParser.parse(meetup_json)).toArray
   
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    setListAdapter(new ArrayAdapter(this, R.layout.row, meetups) {
-      override def getView(position: Int, convertView: View, parent: ViewGroup) = {
-        val row = View.inflate(Meetups.this, R.layout.row, null)
-        val row_text = text_in(row)_
-        val meetup = meetups(position)
-        Event.name(meetup).foreach(row_text(R.id.event_name))
-        Event.group_name(meetup).foreach(row_text(R.id.group_name))
-        Event.photo_url(meetup).foreach { url =>
-          row.findViewById(R.id.icon) match {
-            case view: ImageView => http.future(url >> { is =>
-              val bitmap = BitmapFactory.decodeStream(is)
-              post { view.setImageBitmap(bitmap) }
-            })
+    if (meetup_json == "")
+      finish()
+    else {
+      setListAdapter(new ArrayAdapter(this, R.layout.row, meetups) {
+        override def getView(position: Int, convertView: View, parent: ViewGroup) = {
+          val row = View.inflate(Meetups.this, R.layout.row, null)
+          val row_text = text_in(row)_
+          val meetup = meetups(position)
+          Event.name(meetup).foreach(row_text(R.id.event_name))
+          Event.group_name(meetup).foreach(row_text(R.id.group_name))
+          Event.photo_url(meetup).foreach { url =>
+            row.findViewById(R.id.icon) match {
+              case view: ImageView => http.future(url >> { is =>
+                val bitmap = BitmapFactory.decodeStream(is)
+                post { view.setImageBitmap(bitmap) }
+              })
+            }
           }
+          row
         }
-        row
-      }
-    })
+      })
+    }
   }
   
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
@@ -74,9 +77,8 @@ class Meetups extends ListActivity with ScalaActivity {
 
   override def onOptionsItemSelected(item: MenuItem) = item.getItemId match {
     case R.id.menu_item_reset => 
-      (prefs.access.edit :: prefs.request.edit :: Nil) foreach { p =>
-        p.clear()
-        p.commit()
+      (prefs.access :: prefs.request :: prefs.meetups :: Nil) foreach { p =>
+        p.editor { _.clear() }
       }
       finish()
       true
