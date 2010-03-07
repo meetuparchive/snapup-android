@@ -15,7 +15,7 @@ Snapup is implemented in [Scala][scala], currently 2.8.Beta1. It uses the [Dispa
 
 [scala]: http://www.scala-lang.org/
 [dispatch]: http://dispatch.databinder.net/
-[oauth]: http://dispatch.databinder.net/
+[oauth]: http://oauth.net/
 [asbt]: http://github.com/jberkel/android-plugin
 
 Building
