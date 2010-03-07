@@ -30,22 +30,21 @@ object AndroidHttp extends Http with Threads {
     }
   }
 }
-object ImageCache {
+trait Cache[T] {
   import java.lang.ref.SoftReference
-  import android.graphics.{BitmapFactory,Bitmap}
-  private var cache = Map.empty[String, SoftReference[Bitmap]]
-  def get(url: String) =
-    if (cache.contains(url)) Option(cache(url).get)
+  private var cache = Map.empty[String, SoftReference[T]]
+  def get(key: String) =
+    if (cache.contains(key)) Option(cache(key).get)
     else None
-  def put(url: String, bitmap: Bitmap) = synchronized {
-    cache = cache + ((url, new SoftReference(bitmap)))
-    bitmap
+  def put(key: String)(item: T) = synchronized {
+    cache = cache + ((key, new SoftReference(item)))
+    item
   }
-  def use(url: String)(block: Bitmap => Unit) { get(url) match {
-    case Some(bitmap) => block(bitmap)
-    case None => 
-      AndroidHttp.future(url >> { stm =>
-        block(put(url, BitmapFactory.decodeStream(stm)))
-      })
+}
+class HttpCache[T](retrieve: String => Handler[T]) extends Cache[T] {
+  def use(key: String)(block: T => Unit) { get(key) match {
+    case Some(item) => block(item)
+    case None =>  AndroidHttp.future(retrieve(key) ~> put(key) ~> block)
   } }
 }
+object ImageCache extends HttpCache(new Request(_) >> { stm => android.graphics.BitmapFactory.decodeStream(stm) })
