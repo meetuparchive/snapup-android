@@ -22,6 +22,18 @@ import java.io.{File,FileOutputStream}
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
 
+
+object RsvpCache extends HttpCache[Array[JValue]] {
+  def apply(prefs: Prefs) = load { event_id =>
+    val Some(cli) = Account.client(prefs)
+    cli(Rsvps.event_id(event_id)) ># { json =>
+      Response.results(json).filter { rsvp =>
+        Rsvp.response(rsvp) exists { r => r == "yes" || r == "maybe" }
+      }.toArray
+    }
+  } _
+}
+
 class Members extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
   val http = AndroidHttp
@@ -32,8 +44,8 @@ class Members extends ListActivity with ScalaActivity {
   lazy val group_name = extras("group_name")
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.members)
     val Some(cli) = Account.client(prefs)
+    setContentView(R.layout.members)
     text_in(this)(R.id.event_name)(event_name)
     text_in(this)(R.id.group_name)(group_name)
     text_in(this)(R.id.event_time)(extras("event_time"))
@@ -41,10 +53,7 @@ class Members extends ListActivity with ScalaActivity {
     snap_photo.setOnClickListener {
       startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), 0)
     }
-    http.future(cli(Rsvps.event_id(event_id)) ># { json =>
-      val rsvps = Response.results(json).filter { rsvp =>
-        Rsvp.response(rsvp) exists { r => r == "yes" || r == "maybe" }
-      }.toArray
+    RsvpCache(prefs)(event_id) { rsvps =>
       post { 
         setListAdapter(new ArrayAdapter(this, R.layout.row, rsvps) {
           override def getView(position: Int, convertView: View, parent: ViewGroup) = {
@@ -54,7 +63,7 @@ class Members extends ListActivity with ScalaActivity {
             Rsvp.response(rsvp).filter { _ == "maybe" }.foreach(text_in(row)(R.id.group_name))
             Rsvp.photo_url(rsvp).foreach { url =>
               row.findViewById(R.id.icon) match {
-                case view: ImageView => ImageCache.use(url) { bitmap =>
+                case view: ImageView => ImageCache(url) { bitmap =>
                   post { view.setImageBitmap(bitmap) }
                 }
               }
@@ -64,7 +73,7 @@ class Members extends ListActivity with ScalaActivity {
           override def isEnabled(pos: Int) = false
         })
       }
-    })
+    }
   }
 
   val image_f = new File(Environment.getExternalStorageDirectory, "snapup-temp.jpg")

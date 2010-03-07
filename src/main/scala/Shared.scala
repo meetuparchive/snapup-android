@@ -41,10 +41,12 @@ trait Cache[T] {
     item
   }
 }
-class HttpCache[T](retrieve: String => Handler[T]) extends Cache[T] {
-  def use(key: String)(block: T => Unit) { get(key) match {
-    case Some(item) => block(item)
-    case None =>  AndroidHttp.future(retrieve(key) ~> put(key) ~> block)
+class HttpCache[T] extends Cache[T] {
+  def load(retrieve: String => Handler[T])(key: String)(use: T => Unit) { get(key) match {
+    case Some(item) => use(item)
+    case None => AndroidHttp.future(retrieve(key) ~> put(key) ~> use)
   } }
 }
-object ImageCache extends HttpCache(new Request(_) >> { stm => android.graphics.BitmapFactory.decodeStream(stm) })
+object ImageCache extends HttpCache[android.graphics.Bitmap] {
+  def apply(url: String) = load { _ >> { stm => android.graphics.BitmapFactory.decodeStream(stm) } } (url) _
+}
