@@ -10,6 +10,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.content.{Intent, DialogInterface}
 import android.graphics.{BitmapFactory,Bitmap}
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 
 import dispatch.meetup._
@@ -37,6 +38,7 @@ object RsvpCache extends HttpCache[Array[JValue]] {
 class Members extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
   val http = AndroidHttp
+  val blank = new ColorDrawable
 
   def extras(str: String) = getIntent.getExtras.getString(str)
   lazy val event_name = extras("event_name")
@@ -57,16 +59,27 @@ class Members extends ListActivity with ScalaActivity {
       post { 
         setListAdapter(new ArrayAdapter(this, R.layout.row, rsvps) {
           override def getView(position: Int, convertView: View, parent: ViewGroup) = {
-            val row = View.inflate(Members.this, R.layout.row, null)
+            case class Holder(name: TextView, response: TextView, image: ImageView)
+            val row = if (convertView == null) {
+                val nv = View.inflate(Members.this, R.layout.row, null)
+                nv.setTag(Holder(
+                  nv.findViewById(R.id.event_name).asInstanceOf[TextView], 
+                  nv.findViewById(R.id.group_name).asInstanceOf[TextView], 
+                  nv.findViewById(R.id.icon).asInstanceOf[ImageView]
+                ))
+                nv
+            } else convertView
+            val holder = row.getTag.asInstanceOf[Holder]
+            row.setTag(R.id.icon, position)
             val rsvp = rsvps(position)
-            Rsvp.name(rsvp).foreach(text_in(row)(R.id.event_name))
-            Rsvp.response(rsvp).filter { _ == "maybe" }.foreach(text_in(row)(R.id.group_name))
+            Rsvp.name(rsvp).foreach(holder.name.setText)
+            Rsvp.response(rsvp).map { case "maybe" => "Maybe"; case _ => "" }.foreach(holder.response.setText)
+            holder.image.setImageDrawable(blank)
             Rsvp.photo_url(rsvp).foreach { url =>
-              if (url.length > 0) row.findViewById(R.id.icon) match {
-                case view: ImageView => ImageCache.thumb(url) { bitmap =>
-                  post { view.setImageBitmap(bitmap) }
+              if (url.length > 0) 
+                ImageCache.thumb(url) { bmp => 
+                  post { if (row.getTag(R.id.icon) == position) holder.image.setImageBitmap(bmp) }
                 }
-              }
             }
             row
           }
