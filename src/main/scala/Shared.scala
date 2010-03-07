@@ -49,4 +49,6 @@ class HttpCache[T] extends Cache[T] {
 }
 object ImageCache extends HttpCache[android.graphics.Bitmap] {
   def apply(url: String) = load { _ >> { stm => android.graphics.BitmapFactory.decodeStream(stm) } } (url) _
+  val large_r = "/(member|global)_".r
+  def thumb(url: String) = apply(large_r.replaceFirstIn(url, "/thumb_"))
 }

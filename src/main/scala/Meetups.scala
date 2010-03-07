@@ -40,7 +40,7 @@ class Meetups extends ListActivity with ScalaActivity {
           Event.group_name(meetup).foreach(row_text(R.id.group_name))
           Event.photo_url(meetup).foreach { url =>
             row.findViewById(R.id.icon) match {
-              case view: ImageView => ImageCache(url) { bitmap =>
+              case view: ImageView => ImageCache.thumb(url) { bitmap =>
                 post { view.setImageBitmap(bitmap) }
               }
             }
