@@ -54,10 +54,9 @@ class Members extends ListActivity with ScalaActivity {
             Rsvp.response(rsvp).filter { _ == "maybe" }.foreach(text_in(row)(R.id.group_name))
             Rsvp.photo_url(rsvp).foreach { url =>
               row.findViewById(R.id.icon) match {
-                case view: ImageView => http.future(url >> { is =>
-                  val bitmap = BitmapFactory.decodeStream(is)
+                case view: ImageView => ImageCache.use(url) { bitmap =>
                   post { view.setImageBitmap(bitmap) }
-                })
+                }
               }
             }
             row

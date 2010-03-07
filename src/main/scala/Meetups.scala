@@ -9,7 +9,6 @@ import android.view.{View, ViewGroup, Menu, MenuItem, KeyEvent}
 import android.net.Uri
 import android.provider.MediaStore
 import android.content.{Intent, DialogInterface}
-import android.graphics.{BitmapFactory,Bitmap}
 import android.util.Log
 
 import dispatch.meetup._
@@ -41,10 +40,9 @@ class Meetups extends ListActivity with ScalaActivity {
           Event.group_name(meetup).foreach(row_text(R.id.group_name))
           Event.photo_url(meetup).foreach { url =>
             row.findViewById(R.id.icon) match {
-              case view: ImageView => http.future(url >> { is =>
-                val bitmap = BitmapFactory.decodeStream(is)
+              case view: ImageView => ImageCache.use(url) { bitmap =>
                 post { view.setImageBitmap(bitmap) }
-              })
+              }
             }
           }
           row
