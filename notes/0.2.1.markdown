@@ -1,0 +1,4 @@
+* Cache images and rsvp lists in memory (until dalvik evicts them, which it does eagerly) so they won't always have to reload
+* Load event and member thumbnails instead of full-size images
+* Reuse list item views for better flicking performance in the rsvp listing, which can get quite long
+* Document the project a little bit for github

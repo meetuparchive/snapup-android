@@ -1,6 +1,6 @@
 import sbt._
 
-class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) with MarketPublish {    
+class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) with MarketPublish with posterous.Publish {    
   def androidPlatformName="android-1.6"
   def keyalias = "snapup"
   override def keystorePath = Path.userHome / "meetup.keystore"
