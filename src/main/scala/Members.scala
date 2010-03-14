@@ -68,9 +68,7 @@ class Members extends ListActivity with ScalaActivity {
             row.image.setImageDrawable(blank)
             Rsvp.photo_url(rsvp).foreach { url =>
               if (url.length > 0) 
-                ImageCache.thumb(url) { bmp => 
-                  post { if (current) row.image.setImageBitmap(bmp) }
-                }
+                ImageCache.thumb(url) { bmp => post { if (current) row.image.setImageBitmap(bmp) } }
             }
           }
           override def isEnabled(pos: Int) = false
