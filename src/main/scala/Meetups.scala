@@ -4,7 +4,7 @@ import com.meetup.snapup.R
 
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
-import android.widget.{ArrayAdapter, ListView, Toast, EditText, ImageView}
+import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView, ImageView}
 import android.view.{View, ViewGroup, Menu, MenuItem, KeyEvent}
 import android.net.Uri
 import android.provider.MediaStore
@@ -31,21 +31,17 @@ class Meetups extends ListActivity with ScalaActivity {
     if (meetup_json == "")
       finish()
     else {
-      setListAdapter(new ArrayAdapter(this, R.layout.row, meetups) {
-        override def getView(position: Int, convertView: View, parent: ViewGroup) = {
-          val row = View.inflate(Meetups.this, R.layout.row, null)
-          val row_text = text_in(row)_
+      case class Row(event: TextView, group: TextView, image: ImageView)
+      setListAdapter(new ArrayReusingAdapter[JValue, Row](this, R.layout.row, meetups) {
+        def inflateView = View.inflate(Meetups.this, R.layout.row, null)
+        def setupRow(view: View) = Row(view.text_!(R.id.event_name), view.text_!(R.id.group_name), view.image_!(R.id.icon))
+        def draw(position: Int, row: Row, current: => Boolean) {
           val meetup = meetups(position)
-          Event.name(meetup).foreach(row_text(R.id.event_name))
-          Event.group_name(meetup).foreach(row_text(R.id.group_name))
-          Event.photo_url(meetup).foreach { url =>
-            row.findViewById(R.id.icon) match {
-              case view: ImageView => ImageCache.thumb(url) { bitmap =>
-                post { view.setImageBitmap(bitmap) }
-              }
-            }
-          }
-          row
+          Event.name(meetup).foreach(row.event.setText)
+          Event.group_name(meetup).foreach(row.group.setText)
+          Event.photo_url(meetup).foreach { url => ImageCache.thumb(url) { bitmap =>
+            post { if (current) row.image.setImageBitmap(bitmap) }
+          } }
         }
       })
     }

@@ -4,8 +4,8 @@ import com.meetup.snapup.R
 
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
-import android.widget.{ArrayAdapter, ListView, Toast, EditText, TextView, ImageView, Button}
-import android.view.{View, ViewGroup, Menu, MenuItem}
+import android.widget.{ListView, Toast, EditText, TextView, ImageView, Button}
+import android.view.View
 import android.net.Uri
 import android.provider.MediaStore
 import android.content.{Intent, DialogInterface}
@@ -48,40 +48,30 @@ class Members extends ListActivity with ScalaActivity {
     super.onCreate(savedInstanceState)
     val Some(cli) = Account.client(prefs)
     setContentView(R.layout.members)
-    text_in(this)(R.id.event_name)(event_name)
-    text_in(this)(R.id.group_name)(group_name)
-    text_in(this)(R.id.event_time)(extras("event_time"))
+    text_!(R.id.event_name).setText(event_name)
+    text_!(R.id.group_name).setText(group_name)
+    text_!(R.id.event_time).setText(extras("event_time"))
     val snap_photo = findViewById(R.id.snap_photo).asInstanceOf[Button];
     snap_photo.setOnClickListener {
       startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), 0)
     }
     RsvpCache(prefs)(event_id) { rsvps =>
       post { 
-        setListAdapter(new ArrayAdapter(this, R.layout.row, rsvps) {
-          override def getView(position: Int, convertView: View, parent: ViewGroup) = {
-            case class Holder(name: TextView, response: TextView, image: ImageView)
-            val row = if (convertView == null) {
-                val nv = View.inflate(Members.this, R.layout.row, null)
-                nv.setTag(Holder(
-                  nv.findViewById(R.id.event_name).asInstanceOf[TextView], 
-                  nv.findViewById(R.id.group_name).asInstanceOf[TextView], 
-                  nv.findViewById(R.id.icon).asInstanceOf[ImageView]
-                ))
-                nv
-            } else convertView
-            val holder = row.getTag.asInstanceOf[Holder]
-            row.setTag(R.id.icon, position)
+        case class Row(name: TextView, response: TextView, image: ImageView)
+        setListAdapter(new ArrayReusingAdapter[JValue, Row](this, R.layout.row, rsvps) {
+          def inflateView = View.inflate(Members.this, R.layout.row, null)
+          def setupRow(view: View) = Row (view.text_!(R.id.event_name), view.text_!(R.id.group_name), view.image_!(R.id.icon))
+          def draw(position: Int, row: Row, current: => Boolean) {
             val rsvp = rsvps(position)
-            Rsvp.name(rsvp).foreach(holder.name.setText)
-            Rsvp.response(rsvp).map { case "maybe" => "Maybe"; case _ => "" }.foreach(holder.response.setText)
-            holder.image.setImageDrawable(blank)
+            Rsvp.name(rsvp).foreach(row.name.setText)
+            Rsvp.response(rsvp).map { case "maybe" => "Maybe"; case _ => "" }.foreach(row.response.setText)
+            row.image.setImageDrawable(blank)
             Rsvp.photo_url(rsvp).foreach { url =>
               if (url.length > 0) 
                 ImageCache.thumb(url) { bmp => 
-                  post { if (row.getTag(R.id.icon) == position) holder.image.setImageBitmap(bmp) }
+                  post { if (current) row.image.setImageBitmap(bmp) }
                 }
             }
-            row
           }
           override def isEnabled(pos: Int) = false
         })
