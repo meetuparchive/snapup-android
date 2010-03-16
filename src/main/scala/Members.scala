@@ -132,11 +132,8 @@ class Members extends ListActivity with ScalaActivity {
     val dialog = new AlertDialog.Builder(this)
       .setTitle(event_name)
       .setMessage("Photo Caption: (optional)")
-      .setPositiveButton("Post", new DialogInterface.OnClickListener() {
-        def onClick(dialog: DialogInterface, button: Int) {
-          block(input.getText.toString)
-        }
-      }).setNegativeButton("Cancel", clean_image())
+      .setPositiveButton("Post", block(input.getText.toString))
+      .setNegativeButton("Cancel", clean_image())
       .setOnCancelListener(clean_image())
       .create()
     dialog.setOnDismissListener(input.setVisibility(View.GONE))
