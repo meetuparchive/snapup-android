@@ -6,7 +6,7 @@ import android.content.{DialogInterface,SharedPreferences, Context}
 import android.widget.{TextView, ImageView, ArrayAdapter}
 import android.view.{View, ViewGroup}
 
-trait ScalaActivity extends Activity {
+trait ScalaActivity extends Activity with PrefEditing {
   val handler = new Handler
   def post(block: => Unit) { 
     handler.post(new Runnable{
@@ -27,14 +27,6 @@ trait ScalaActivity extends Activity {
   }
   def text_!(id: Int) = findViewById(id).asInstanceOf[TextView]
 
-  implicit def sp2editing(sp: SharedPreferences) = new EditingContext(sp)
-  class EditingContext(sp: SharedPreferences) {
-    def editor(block: SharedPreferences.Editor => Unit) = {
-      val editor = sp.edit()
-      block(editor)
-      editor.commit()
-    }
-  }
   implicit def view2casting(view: View) = new ViewCaster(view)
   class ViewCaster(view: View){
     def text_!(id: Int) = view.findViewById(id).asInstanceOf[TextView]

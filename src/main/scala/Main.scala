@@ -17,6 +17,9 @@ import net.liftweb.json.JsonAST._
 
 class Main extends ScalaActivity {
   val http = AndroidHttp.on_error {
+    case StatusCode(400, _) =>
+      prefs.clear()
+      retrieve_tokens()
     case e => post {
       Log.e("Main", "Error Authenticating with Meetup", e)
       auth_dialog.dismiss()
@@ -54,6 +57,7 @@ class Main extends ScalaActivity {
     }
     if (prefs.meetups.contains(prefs.today)) proceed()
     else  {
+      prefs.meetups.editor { _.clear() }
       val cli = Account.client(at)
       http.future(cli(Members.self) ># { json =>
         val List(id) = Response.results(json) >>= Member.id
@@ -76,6 +80,9 @@ class Main extends ScalaActivity {
   lazy val auth_dialog = ProgressDialog.show(this, "", "Authenticating with Meetup", true)
   override def onResume() {
     super.onResume()
+    retrieve_tokens()
+  }
+  def retrieve_tokens() {
     Account.tokens(prefs.access) match {
       case None => 
         getIntent.getData match {

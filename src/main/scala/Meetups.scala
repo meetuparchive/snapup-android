@@ -28,9 +28,10 @@ class Meetups extends ListActivity with ScalaActivity {
   
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    if (meetup_json == "")
+    if (meetup_json == "") {
+      startActivity(new Intent(Meetups.this, classOf[Main]))
       finish()
-    else {
+    } else {
       case class Row(event: TextView, group: TextView, image: ImageView)
       setListAdapter(new ArrayReusingAdapter[JValue, Row](this, R.layout.row, meetups) {
         def inflateView = View.inflate(Meetups.this, R.layout.row, null)
@@ -71,9 +72,8 @@ class Meetups extends ListActivity with ScalaActivity {
 
   override def onOptionsItemSelected(item: MenuItem) = item.getItemId match {
     case R.id.menu_item_reset => 
-      (prefs.access :: prefs.request :: prefs.meetups :: Nil) foreach { p =>
-        p.editor { _.clear() }
-      }
+      prefs.clear()
+      startActivity(new Intent(Meetups.this, classOf[Main]))
       finish()
       true
     case _  => false

@@ -8,12 +8,28 @@ import dispatch.meetup._
 import dispatch.oauth._
 import dispatch.Http._
 
-class Prefs(context: Context) {
+trait PrefEditing {
+  implicit def sp2editing(sp: SharedPreferences) = new EditingContext(sp)
+  class EditingContext(sp: SharedPreferences) {
+    def editor(block: SharedPreferences.Editor => Unit) = {
+      val editor = sp.edit()
+      block(editor)
+      editor.commit()
+    }
+  }
+}
+
+class Prefs(context: Context) extends PrefEditing {
   val request = context.getSharedPreferences("request", Context.MODE_PRIVATE)
   val access = context.getSharedPreferences("access", Context.MODE_PRIVATE)
   val meetups = context.getSharedPreferences("meetups", Context.MODE_PRIVATE)
   private val df = java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT)
   def today = df.format(new java.util.Date)
+  def clear() {
+    (access :: request :: meetups :: Nil) foreach { p =>
+      p.editor { _.clear() }
+    }
+  }
 }
 
 object Account {
