@@ -52,7 +52,7 @@ class Members extends ListActivity with ScalaActivity {
     text_!(R.id.group_name).setText(group_name)
     text_!(R.id.event_time).setText(extras("event_time"))
     val snap_photo = findViewById(R.id.snap_photo).asInstanceOf[Button];
-    snap_photo.setOnClickListener {
+    snap_photo.setOnClickListener { () =>
       startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), 0)
     }
     RsvpCache(prefs)(event_id) { rsvps =>
@@ -132,11 +132,11 @@ class Members extends ListActivity with ScalaActivity {
     val dialog = new AlertDialog.Builder(this)
       .setTitle(event_name)
       .setMessage("Photo Caption: (optional)")
-      .setPositiveButton("Post", block(input.getText.toString))
-      .setNegativeButton("Cancel", clean_image())
-      .setOnCancelListener(clean_image())
+      .setPositiveButton("Post", () => block(input.getText.toString))
+      .setNegativeButton("Cancel", () => clean_image())
+      .setOnCancelListener(() => clean_image())
       .create()
-    dialog.setOnDismissListener(input.setVisibility(View.GONE))
+    dialog.setOnDismissListener(() => input.setVisibility(View.GONE))
     dialog.setView(input, 15, 15, 15, 15)
     dialog.show()
   }
@@ -148,8 +148,8 @@ class Members extends ListActivity with ScalaActivity {
       .setPositiveButton("Retry", new DialogInterface.OnClickListener {
         def onClick(dialog: DialogInterface, which: Int) { try_upload(event_id, caption) }
       })
-      .setNeutralButton("Okay", clean_image())
-      .setOnCancelListener(clean_image())
+      .setNeutralButton("Okay", () => clean_image())
+      .setOnCancelListener(() => clean_image())
       .create()
       .show()
   }

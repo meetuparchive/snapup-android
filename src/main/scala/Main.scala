@@ -27,8 +27,8 @@ class Main extends ScalaActivity {
       new AlertDialog.Builder(Main.this)
         .setTitle("Connection Error")
         .setMessage("Snapup requires a network connection to retrieve your Meetups.")
-        .setPositiveButton("Exit", exit)
-        .setOnCancelListener(exit)
+        .setPositiveButton("Exit", () => exit)
+        .setOnCancelListener(() => exit)
         .show()
     }
   }
