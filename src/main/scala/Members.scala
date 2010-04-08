@@ -145,9 +145,7 @@ class Members extends ListActivity with ScalaActivity {
     new AlertDialog.Builder(this)
       .setTitle(R.string.upload_failed_title)
       .setMessage(R.string.upload_failed)
-      .setPositiveButton("Retry", new DialogInterface.OnClickListener {
-        def onClick(dialog: DialogInterface, which: Int) { try_upload(event_id, caption) }
-      })
+      .setPositiveButton("Retry", () => try_upload(event_id, caption))
       .setNeutralButton("Okay", () => clean_image())
       .setOnCancelListener(() => clean_image())
       .create()
