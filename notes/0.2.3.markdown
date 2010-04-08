@@ -1,0 +1,1 @@
+Fixes the callbacks that were disabled in the last release, causing photo upload to fail.
