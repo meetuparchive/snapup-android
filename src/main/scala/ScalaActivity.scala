@@ -14,16 +14,16 @@ trait ScalaActivity extends Activity with PrefEditing {
     })
   }
   implicit def f2cancel(block: () => Unit) = new DialogInterface.OnCancelListener {
-    def onCancel(dialog: DialogInterface) { block }
+    def onCancel(dialog: DialogInterface) { block() }
   }
   implicit def f2click(block: () => Unit) = new DialogInterface.OnClickListener {
-    def onClick(dialog: DialogInterface, which: Int) { block }
+    def onClick(dialog: DialogInterface, which: Int) { block() }
   }
   implicit def f2dismissal(block: () => Unit) = new DialogInterface.OnDismissListener {
-    def onDismiss(dialog: DialogInterface) { block }
+    def onDismiss(dialog: DialogInterface) { block() }
   }
   implicit def f2viewclick(block: () => Unit) = new View.OnClickListener {
-    def onClick(view: View) { block }
+    def onClick(view: View) { block() }
   }
   def text_!(id: Int) = findViewById(id).asInstanceOf[TextView]
 
