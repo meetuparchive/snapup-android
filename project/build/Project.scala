@@ -24,11 +24,20 @@ class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo)
 
 trait TypedResources extends AndroidProject {
   import scala.xml._
+  val Id = """@\+id/(.*)""".r
   lazy val generateTypedResources = task {
     (mainResPath ** "*.xml").get.foreach { path =>
       val xml = XML.loadFile(path.asFile)
-      val android_ns = "http://schemas.android.com/apk/res/android"
-      xml \\ "ListView" \\ "@{%s}id".format(android_ns) foreach println
+      xml.descendant flatMap { node =>
+        node.attributes.get("http://schemas.android.com/apk/res/android", node, "id") flatMap {
+          _.firstOption map { _.text } flatMap {
+            case Id(id) => try {
+              Some("android.widget." + node.label, id)
+            } catch { case _ => None }
+            case _ => None
+          }
+        }
+      } foreach { n => println(n) }
     }
     None
   }
