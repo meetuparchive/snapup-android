@@ -29,10 +29,16 @@ trait TypedResources extends AndroidProject {
     (mainResPath ** "*.xml").get.foreach { path =>
       val xml = XML.loadFile(path.asFile)
       xml.descendant flatMap { node =>
+        // all nodes
         node.attribute("http://schemas.android.com/apk/res/android", "id") flatMap {
+          // with android:id attribute
           _.firstOption map { _.text } flatMap {
-            case Id(id) => try {
-              Some("android.widget." + node.label, id)
+            case Id(id) => try { Some(
+              // whre ids start with @+id/
+              ClasspathUtilities.toLoader(androidJarPath).loadClass(
+                // where the lable is a widget in the android jar
+                "android.widget." + node.label
+              ).getName, id)
             } catch { case _ => None }
             case _ => None
           }
