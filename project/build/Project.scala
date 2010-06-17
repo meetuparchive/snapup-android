@@ -27,9 +27,13 @@ trait TypedResources extends AndroidProject {
   def managedScalaPath = "src_managed" / "main" / "scala"
   def typedResource = managedScalaPath / "TR.scala"
   abstract override def mainSourceRoots = super.mainSourceRoots +++ managedScalaPath
-  lazy val generateTypedResources = task {
+  def xmlResources = mainResPath ** "*.xml"
+  override def compileAction = super.compileAction dependsOn generateTypedResources
+  override def watchPaths = super.watchPaths +++ xmlResources
+  
+  lazy val generateTypedResources = fileTask(typedResource from xmlResources) {
     val Id = """@\+id/(.*)""".r
-    val resources = (mainResPath ** "*.xml").get.flatMap { path =>
+    val resources = xmlResources.get.flatMap { path =>
       val xml = XML.loadFile(path.asFile)
       xml.descendant flatMap { node =>
         // all nodes
@@ -39,7 +43,7 @@ trait TypedResources extends AndroidProject {
             case Id(id) => try { Some(id,
               // whre ids start with @+id/
               ClasspathUtilities.toLoader(androidJarPath).loadClass(
-                // where the lable is a widget in the android jar
+                // where the label is a widget in the android jar
                 "android.widget." + node.label
               ).getName)
             } catch { case _ => None }
