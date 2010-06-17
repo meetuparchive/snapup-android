@@ -24,27 +24,41 @@ class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo)
 
 trait TypedResources extends AndroidProject {
   import scala.xml._
+  def managedScalaPath = "src_managed" / "main" / "scala"
+  def typedResource = managedScalaPath / "TR.scala"
+  abstract override def mainSourceRoots = super.mainSourceRoots +++ managedScalaPath
   lazy val generateTypedResources = task {
     val Id = """@\+id/(.*)""".r
-    (mainResPath ** "*.xml").get.foreach { path =>
+    val resources = (mainResPath ** "*.xml").get.flatMap { path =>
       val xml = XML.loadFile(path.asFile)
       xml.descendant flatMap { node =>
         // all nodes
         node.attribute("http://schemas.android.com/apk/res/android", "id") flatMap {
           // with android:id attribute
           _.firstOption map { _.text } flatMap {
-            case Id(id) => try { Some(
+            case Id(id) => try { Some(id,
               // whre ids start with @+id/
               ClasspathUtilities.toLoader(androidJarPath).loadClass(
                 // where the lable is a widget in the android jar
                 "android.widget." + node.label
-              ).getName, id)
+              ).getName)
             } catch { case _ => None }
             case _ => None
           }
         }
-      } foreach { n => println(n) }
-    }
+      }
+    }.foldLeft(Map.empty[String, String]) { case (m, (k, v)) => m + (k -> v) }
+    FileUtilities.write(typedResource.asFile,
+    """     |package %s
+            |
+            |object TR {
+            |%s
+            |}""".stripMargin.format(
+              manifestPackage, resources map { case (id, classname) =>
+                "  val %s = classOf[%s]".format(id, classname)
+              } mkString "\n"
+            ), log
+    )
     None
   }
 }
