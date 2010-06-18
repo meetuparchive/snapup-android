@@ -62,19 +62,19 @@ trait TypedResources extends AndroidProject {
             |object TR {
             |%s
             |}
-            |trait TypedViewable {
+            |trait TypedViewHolder {
             |  def view: View
             |  def findView[T](tr: TypedResource[T]): T = view.findViewById(tr.id).asInstanceOf[T]  
             |}
             |trait TypedView extends View { def view = this }
-            |trait TypedActivitiable {
+            |trait TypedActivityHolder {
             |  def activity: Activity
             |  def findView[T](tr: TypedResource[T]): T = activity.findViewById(tr.id).asInstanceOf[T]
             |}
-            |trait TypedActivity extends Activity with TypedActivitiable { def activity = this }
+            |trait TypedActivity extends Activity with TypedActivityHolder { def activity = this }
             |object TypedResource {
-            |  implicit def view2typed(v: View) = new TypedViewable { def view = v }
-            |  implicit def view2typed(act: Activity) = new TypedActivitiable { def activity = act }
+            |  implicit def view2typed(v: View) = new TypedViewHolder { def view = v }
+            |  implicit def view2typed(act: Activity) = new TypedActivityHolder { def activity = act }
             |}
             |""".stripMargin.format(
               manifestPackage, resources map { case (id, classname) =>
