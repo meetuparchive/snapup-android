@@ -25,13 +25,6 @@ trait ScalaActivity extends Activity with PrefEditing {
   implicit def f2viewclick(block: () => Unit) = new View.OnClickListener {
     def onClick(view: View) { block() }
   }
-  def text_!(id: Int) = findViewById(id).asInstanceOf[TextView]
-
-  implicit def view2casting(view: View) = new ViewCaster(view)
-  class ViewCaster(view: View){
-    def text_!(id: Int) = view.findViewById(id).asInstanceOf[TextView]
-    def image_!(id: Int) = view.findViewById(id).asInstanceOf[ImageView]
-  }
 }
 
 abstract class ArrayReusingAdapter[T <: AnyRef, R](content: Context, id: Int, seq: Array[T]) extends ArrayAdapter(content, id, seq) {

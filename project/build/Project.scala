@@ -55,7 +55,19 @@ trait TypedResources extends AndroidProject {
     }.foldLeft(Map.empty[String, String]) { case (m, (k, v)) => m + (k -> v) }
     FileUtilities.write(typedResource.asFile,
     """     |package %s
+            |import android.app.Activity
+            |import android.view.View
             |
+            |class TypedView(view: View) {
+            |  def findView[T](tr: TypedResource[T]): T = view.findViewById(tr.id).asInstanceOf[T]
+            |}
+            |class TypedActivity(activity: Activity) {
+            |  def findView[T](tr: TypedResource[T]): T = activity.findViewById(tr.id).asInstanceOf[T]
+            |}
+            |object TypedResource {
+            |  implicit def view2typed(view: View) = new TypedView(view)
+            |  implicit def view2typed(activity: Activity) = new TypedActivity(activity)
+            |}
             |case class TypedResource[T](id: Int)
             |object TR {
             |%s

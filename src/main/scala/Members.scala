@@ -1,6 +1,7 @@
 package snapup
 
-import com.meetup.snapup.R
+import com.meetup.snapup.{R, TR, TypedResource}
+import TypedResource._
 
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
@@ -48,10 +49,10 @@ class Members extends ListActivity with ScalaActivity {
     super.onCreate(savedInstanceState)
     val Some(cli) = Account.client(prefs)
     setContentView(R.layout.members)
-    text_!(R.id.event_name).setText(event_name)
-    text_!(R.id.group_name).setText(group_name)
-    text_!(R.id.event_time).setText(extras("event_time"))
-    val snap_photo = findViewById(R.id.snap_photo).asInstanceOf[Button];
+    this.findView(TR.event_name).setText(event_name)
+    this.findView(TR.group_name).setText(group_name)
+    this.findView(TR.event_time).setText(extras("event_time"))
+    val snap_photo = this.findView(TR.snap_photo).asInstanceOf[Button];
     snap_photo.setOnClickListener { () =>
       startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), 0)
     }
@@ -60,7 +61,7 @@ class Members extends ListActivity with ScalaActivity {
         case class Row(name: TextView, response: TextView, image: ImageView)
         setListAdapter(new ArrayReusingAdapter[JValue, Row](this, R.layout.row, rsvps) {
           def inflateView = View.inflate(Members.this, R.layout.row, null)
-          def setupRow(view: View) = Row (view.text_!(R.id.event_name), view.text_!(R.id.group_name), view.image_!(R.id.icon))
+          def setupRow(view: View) = Row (view.findView(TR.event_name), view.findView(TR.group_name), view.findView(TR.icon))
           def draw(position: Int, row: Row, current: => Boolean) {
             val rsvp = rsvps(position)
             Rsvp.name(rsvp).foreach(row.name.setText)
