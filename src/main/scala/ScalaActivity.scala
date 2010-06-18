@@ -6,7 +6,7 @@ import android.content.{DialogInterface,SharedPreferences, Context}
 import android.widget.{TextView, ImageView, ArrayAdapter}
 import android.view.{View, ViewGroup}
 
-trait ScalaActivity extends Activity with PrefEditing {
+trait ScalaActivity extends Activity with PrefEditing with com.meetup.snapup.TypedActivity {
   val handler = new Handler
   def post(block: => Unit) { 
     handler.post(new Runnable{

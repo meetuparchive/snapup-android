@@ -49,10 +49,10 @@ class Members extends ListActivity with ScalaActivity {
     super.onCreate(savedInstanceState)
     val Some(cli) = Account.client(prefs)
     setContentView(R.layout.members)
-    this.findView(TR.event_name).setText(event_name)
-    this.findView(TR.group_name).setText(group_name)
-    this.findView(TR.event_time).setText(extras("event_time"))
-    val snap_photo = this.findView(TR.snap_photo).asInstanceOf[Button];
+    findView(TR.event_name).setText(event_name)
+    findView(TR.group_name).setText(group_name)
+    findView(TR.event_time).setText(extras("event_time"))
+    val snap_photo = findView(TR.snap_photo).asInstanceOf[Button];
     snap_photo.setOnClickListener { () =>
       startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(image_f)), 0)
     }

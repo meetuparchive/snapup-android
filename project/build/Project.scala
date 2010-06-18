@@ -58,20 +58,25 @@ trait TypedResources extends AndroidProject {
             |import android.app.Activity
             |import android.view.View
             |
-            |class TypedView(view: View) {
-            |  def findView[T](tr: TypedResource[T]): T = view.findViewById(tr.id).asInstanceOf[T]
-            |}
-            |class TypedActivity(activity: Activity) {
-            |  def findView[T](tr: TypedResource[T]): T = activity.findViewById(tr.id).asInstanceOf[T]
-            |}
-            |object TypedResource {
-            |  implicit def view2typed(view: View) = new TypedView(view)
-            |  implicit def view2typed(activity: Activity) = new TypedActivity(activity)
-            |}
             |case class TypedResource[T](id: Int)
             |object TR {
             |%s
-            |}""".stripMargin.format(
+            |}
+            |trait TypedViewable {
+            |  def view: View
+            |  def findView[T](tr: TypedResource[T]): T = view.findViewById(tr.id).asInstanceOf[T]  
+            |}
+            |trait TypedView extends View { def view = this }
+            |trait TypedActivitiable {
+            |  def activity: Activity
+            |  def findView[T](tr: TypedResource[T]): T = activity.findViewById(tr.id).asInstanceOf[T]
+            |}
+            |trait TypedActivity extends Activity with TypedActivitiable { def activity = this }
+            |object TypedResource {
+            |  implicit def view2typed(v: View) = new TypedViewable { def view = v }
+            |  implicit def view2typed(act: Activity) = new TypedActivitiable { def activity = act }
+            |}
+            |""".stripMargin.format(
               manifestPackage, resources map { case (id, classname) =>
                 "  val %s = TypedResource[%s](R.id.%s)".format(id, classname, id)
               } mkString "\n"
