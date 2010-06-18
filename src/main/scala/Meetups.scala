@@ -1,6 +1,6 @@
 package snapup
 
-import com.meetup.snapup.R
+import com.meetup.snapup.{R,TR,TypedResource}
 
 import android.app.{Activity, ListActivity, AlertDialog, ProgressDialog}
 import android.os.{Bundle, Environment, Looper, Handler, Message}
@@ -26,6 +26,9 @@ class Meetups extends ListActivity with ScalaActivity {
   lazy val meetup_json = prefs.meetups.getString(prefs.today, "")
   lazy val meetups =  Response.results(JsonParser.parse(meetup_json)).toArray
   
+  def findView[T](tr: TypedResource[T])(implicit view: View): T =
+    view.findViewById(tr.id).asInstanceOf[T]
+  
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
     if (meetup_json == "") {
@@ -35,7 +38,7 @@ class Meetups extends ListActivity with ScalaActivity {
       case class Row(event: TextView, group: TextView, image: ImageView)
       setListAdapter(new ArrayReusingAdapter[JValue, Row](this, R.layout.row, meetups) {
         def inflateView = View.inflate(Meetups.this, R.layout.row, null)
-        def setupRow(view: View) = Row(view.text_!(R.id.event_name), view.text_!(R.id.group_name), view.image_!(R.id.icon))
+        def setupRow(view: View) = Row(findView(TR.event_name)(view), view.text_!(R.id.group_name), view.image_!(R.id.icon))
         def draw(position: Int, row: Row, current: => Boolean) {
           val meetup = meetups(position)
           Event.name(meetup).foreach(row.event.setText)

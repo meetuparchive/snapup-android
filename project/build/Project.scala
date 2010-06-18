@@ -29,6 +29,7 @@ trait TypedResources extends AndroidProject {
   abstract override def mainSourceRoots = super.mainSourceRoots +++ managedScalaPath
   def xmlResources = mainResPath ** "*.xml"
   override def compileAction = super.compileAction dependsOn generateTypedResources
+  override def cleanAction = super.cleanAction dependsOn cleanTask(managedScalaPath)
   override def watchPaths = super.watchPaths +++ xmlResources
   
   lazy val generateTypedResources = fileTask(typedResource from xmlResources) {
@@ -55,11 +56,12 @@ trait TypedResources extends AndroidProject {
     FileUtilities.write(typedResource.asFile,
     """     |package %s
             |
+            |case class TypedResource[T](id: Int)
             |object TR {
             |%s
             |}""".stripMargin.format(
               manifestPackage, resources map { case (id, classname) =>
-                "  val %s = classOf[%s]".format(id, classname)
+                "  val %s = TypedResource[%s](R.id.%s)".format(id, classname, id)
               } mkString "\n"
             ), log
     )
