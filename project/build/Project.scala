@@ -64,12 +64,12 @@ trait TypedResources extends AndroidProject {
             |}
             |trait TypedViewHolder {
             |  def view: View
-            |  def findView[T](tr: TypedResource[T]): T = view.findViewById(tr.id).asInstanceOf[T]  
+            |  def findView[T](tr: TypedResource[T]) = view.findViewById(tr.id).asInstanceOf[T]  
             |}
             |trait TypedView extends View { def view = this }
             |trait TypedActivityHolder {
             |  def activity: Activity
-            |  def findView[T](tr: TypedResource[T]): T = activity.findViewById(tr.id).asInstanceOf[T]
+            |  def findView[T](tr: TypedResource[T]) = activity.findViewById(tr.id).asInstanceOf[T]
             |}
             |trait TypedActivity extends Activity with TypedActivityHolder { def activity = this }
             |object TypedResource {
