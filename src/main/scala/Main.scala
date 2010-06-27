@@ -16,22 +16,7 @@ import net.liftweb.json._
 import net.liftweb.json.JsonAST._
 
 class Main extends ScalaActivity {
-  val http = AndroidHttp.on_error {
-    case StatusCode(400, _) =>
-      prefs.clear()
-      retrieve_tokens()
-    case e => post {
-      Log.e("Main", "Error Authenticating with Meetup", e)
-      auth_dialog.dismiss()
-      def exit = finish()
-      new AlertDialog.Builder(Main.this)
-        .setTitle("Connection Error")
-        .setMessage("Snapup requires a network connection to retrieve your Meetups.")
-        .setPositiveButton("Exit", () => exit)
-        .setOnCancelListener(() => exit)
-        .show()
-    }
-  }
+  def http = new AndroidHttp
   lazy val prefs = new Prefs(this)
 
   def write(sp: SharedPreferences, token: Token) = {
@@ -59,7 +44,7 @@ class Main extends ScalaActivity {
     else  {
       prefs.meetups.editor { _.clear() }
       val cli = Account.client(at)
-      http.future(cli(Members.self) ># { json =>
+      future { http(cli(Members.self) ># { json =>
         val List(id) = Response.results(json) >>= Member.id
         http(cli(Events.member_id(id).status(Event.Past, Event.Upcoming)) >- { json =>
           post { 
@@ -70,7 +55,7 @@ class Main extends ScalaActivity {
             proceed() 
           }
         })
-      })
+      }) }
     }
   }
   override def onCreate(savedInstanceState: Bundle) {
@@ -87,20 +72,38 @@ class Main extends ScalaActivity {
       case None => 
         getIntent.getData match {
           case null =>
-            http.future(Auth.request_token(Account.consumer, "snapup:///") ~> { token =>
+            future { http(Auth.request_token(Account.consumer, "snapup:///") ~> { token =>
               authorize(write(prefs.request, token))
-            })
+            }) }
           case uri => 
             Account.tokens(prefs.request) filter { 
               _.value == uri.getQueryParameter("oauth_token") 
-            } foreach { rt => http.future(
+            } foreach { rt => future { http(
               Auth.access_token(Account.consumer, rt, uri.getQueryParameter("oauth_verifier")) ~> { token: oauth.Token =>
                 fetch_meetups(write(prefs.access, token))
               }
-            )
-          }
+            ) } }
         }
       case Some(at) => fetch_meetups(at)
+    }
+  }
+  def future(block: => Unit) {
+    try { dispatch.futures.DefaultFuture.future(block) }
+    catch {
+      case StatusCode(400, _) =>
+        prefs.clear()
+        retrieve_tokens()
+      case e => post {
+        Log.e("Main", "Error Authenticating with Meetup", e)
+        auth_dialog.dismiss()
+        def exit = finish()
+        new AlertDialog.Builder(Main.this)
+          .setTitle("Connection Error")
+          .setMessage("Snapup requires a network connection to retrieve your Meetups.")
+          .setPositiveButton("Exit", () => exit)
+          .setOnCancelListener(() => exit)
+          .show()
+      }
     }
   }
 }

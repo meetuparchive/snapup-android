@@ -24,6 +24,7 @@ import java.io.{File,FileOutputStream}
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
 
+import dispatch.futures.DefaultFuture.future
 
 object RsvpCache extends HttpCache[Array[JValue]] {
   def apply(prefs: Prefs) = load { event_id =>
@@ -38,7 +39,7 @@ object RsvpCache extends HttpCache[Array[JValue]] {
 
 class Members extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
-  val http = AndroidHttp
+  def http = new AndroidHttp
   val blank = new ColorDrawable
 
   def extras(str: String) = getIntent.getExtras.getString(str)
@@ -107,25 +108,26 @@ class Members extends ListActivity with ScalaActivity {
     loading.setTitle("Posting Photo to Meetup")
     loading.show()
     val Some(cli) = Account.client(prefs)
-    http on_error {
-      case e => 
+    future { 
+      try {
+        http(cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { total => 
+          post { loading.setMax(total.toInt) }
+          (bytes) => { post { loading.setProgress(bytes.toInt) } }
+        } >> { stm =>
+          image_f.delete()
+          post { 
+            loading.dismiss() 
+            Toast.makeText(this, R.string.photo_uploaded, Toast.LENGTH_LONG).show()
+          }
+        })
+      } catch { case e => 
         Log.e("Meetups", "Error uploading photo", e)
         post {
           loading.dismiss()
           failed_dialog(event_id, caption)
         }
-    } future (
-      cli(PhotoUpload.event_id(event_id).caption(caption).photo(image_f)) >?> { total => 
-        post { loading.setMax(total.toInt) }
-        (bytes) => { post { loading.setProgress(bytes.toInt) } }
-      } >> { stm =>
-        image_f.delete()
-        post { 
-          loading.dismiss() 
-          Toast.makeText(this, R.string.photo_uploaded, Toast.LENGTH_LONG).show()
-        }
       }
-    )
+    }
   }
   
   def get_caption[T](event_name: String)(block: String => Unit) {

@@ -23,7 +23,6 @@ import TypedResource._
 
 class Meetups extends ListActivity with ScalaActivity {
   lazy val prefs = new Prefs(this)
-  val http = AndroidHttp
 
   lazy val meetup_json = prefs.meetups.getString(prefs.today, "")
   lazy val meetups =  Response.results(JsonParser.parse(meetup_json)).toArray

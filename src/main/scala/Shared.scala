@@ -39,7 +39,7 @@ object Account {
   def client(access: Token) = OAuthClient(consumer, access)
   def client(prefs: Prefs) = tokens(prefs.access) map { access => OAuthClient(consumer, access) }
 }
-object AndroidHttp extends Http with Threads {
+class AndroidHttp extends Http {
   override lazy val log = new Logger {
     def info(msg: String, items: Any*) { 
       Log.i("Main", "INF: [android logger] dispatch: " + msg.format(items: _*)) 
@@ -58,9 +58,10 @@ trait Cache[T] {
   }
 }
 class HttpCache[T] extends Cache[T] {
+  import dispatch.futures.DefaultFuture.future
   def load(retrieve: String => Handler[T])(key: String)(use: T => Unit) { get(key) match {
     case Some(item) => use(item)
-    case None => AndroidHttp.future(retrieve(key) ~> put(key) ~> use)
+    case None => future { (new AndroidHttp)(retrieve(key) ~> put(key) ~> use) }
   } }
 }
 object ImageCache extends HttpCache[android.graphics.Bitmap] {
