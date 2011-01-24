@@ -12,8 +12,6 @@ import android.content.{Intent, DialogInterface}
 import android.util.Log
 
 import dispatch.meetup._
-import dispatch.Http
-import dispatch.Http._
 import java.io.{File,FileOutputStream}
 
 import net.liftweb.json._

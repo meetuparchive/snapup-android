@@ -11,7 +11,6 @@ import dispatch._
 import oauth._
 import meetup._
 import dispatch.liftjson.Js._
-import Http._
 import net.liftweb.json._
 import net.liftweb.json.JsonAST._
 
@@ -44,7 +43,7 @@ class Main extends ScalaActivity {
     else  {
       prefs.meetups.editor { _.clear() }
       val cli = Account.client(at)
-      future { http(cli(Members.self) ># { json =>
+      http(cli(Members.self) ># { json =>
         val List(id) = Response.results(json) >>= Member.id
         http(cli(Events.member_id(id).status(Event.Past, Event.Upcoming)) >- { json =>
           post { 
@@ -55,7 +54,7 @@ class Main extends ScalaActivity {
             proceed() 
           }
         })
-      }) }
+      })
     }
   }
   override def onCreate(savedInstanceState: Bundle) {
@@ -72,17 +71,17 @@ class Main extends ScalaActivity {
       case None => 
         getIntent.getData match {
           case null =>
-            future { http(Auth.request_token(Account.consumer, "snapup:///") ~> { token =>
+            http(Auth.request_token(Account.consumer, "snapup:///") ~> { token =>
               authorize(write(prefs.request, token))
-            }) }
+            })
           case uri => 
             Account.tokens(prefs.request) filter { 
               _.value == uri.getQueryParameter("oauth_token") 
-            } foreach { rt => future { http(
+            } foreach { rt => http(
               Auth.access_token(Account.consumer, rt, uri.getQueryParameter("oauth_verifier")) ~> { token: oauth.Token =>
                 fetch_meetups(write(prefs.access, token))
               }
-            ) } }
+            ) }
         }
       case Some(at) => fetch_meetups(at)
     }
