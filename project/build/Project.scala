@@ -2,12 +2,14 @@ import sbt._
 
 class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo) 
     with MarketPublish with TypedResources with posterous.Publish {    
-  def androidPlatformName="android-1.6"
+  def androidPlatformName="android-4"
   def keyalias = "snapup"
   override def keystorePath = Path.userHome / "meetup.keystore"
 
   val databinder_net = "databinder.net repository" at "http://databinder.net/repo"
-  lazy val meetup = "net.databinder" %% "dispatch-meetup" % "0.7.4"
+  lazy val dmeet = "net.databinder" %% "dispatch-meetup" % "0.8.0.Beta3-SNAPSHOT"
+  lazy val dnio = "net.databinder" %% "dispatch-nio" % "0.8.0.Beta3-SNAPSHOT"
+  lazy val dhttp = "net.databinder" %% "dispatch-http" % "0.8.0.Beta3-SNAPSHOT"
 
   override def proguardOption = """
     |-keep class dispatch.** { 

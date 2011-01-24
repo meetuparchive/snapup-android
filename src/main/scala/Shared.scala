@@ -6,7 +6,7 @@ import android.util.Log
 import dispatch._
 import dispatch.meetup._
 import dispatch.oauth._
-import dispatch.Http._
+import Request._
 
 trait PrefEditing {
   implicit def sp2editing(sp: SharedPreferences) = new EditingContext(sp)
