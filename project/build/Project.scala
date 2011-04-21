@@ -7,8 +7,8 @@ class SnapupProject(info: ProjectInfo) extends AndroidProject(info: ProjectInfo)
   override def keystorePath = Path.userHome / "meetup.keystore"
 
   val databinder_net = "databinder.net repository" at "http://databinder.net/repo"
-  lazy val dmeet = "net.databinder" %% "dispatch-meetup" % "0.8.0.Beta3"
-  lazy val dnio = "net.databinder" %% "dispatch-nio" % "0.8.0.Beta3"
+  lazy val dmeet = "net.databinder" %% "dispatch-meetup" % "0.8.0"
+  lazy val dnio = "net.databinder" %% "dispatch-nio" % "0.8.0"
 
   override def proguardOption = """
     |-keep class dispatch.** { 
